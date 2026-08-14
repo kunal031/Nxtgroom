@@ -9,7 +9,7 @@ import BOAManagement from './components/BOAManagement';
 import CollegeManagement from './components/CollegeManagement';
 import InstructorManagement from './components/InstructorManagement';
 
-const API_BASE = `http://${window.location.hostname}:8000`;
+const API_BASE = import.meta.env.VITE_API_BASE || `http://${window.location.hostname}:8000`;
 
 export default function App() {
   const [authToken, setAuthToken] = useState(localStorage.getItem('nxtwave_token'));

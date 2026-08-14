@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { ShieldCheck, ArrowRight } from 'lucide-react';
 
-const API_BASE = `http://${window.location.hostname}:8000`;
+const API_BASE = import.meta.env.VITE_API_BASE || `http://${window.location.hostname}:8000`;
 
 export default function Login({ onLogin }) {
   const [username, setUsername] = useState('');

@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { Camera, UploadCloud, RefreshCw, LogOut, MapPin } from 'lucide-react';
 
-const API_BASE = `http://${window.location.hostname}:8000`;
+const API_BASE = import.meta.env.VITE_API_BASE || `http://${window.location.hostname}:8000`;
 
 export default function EvaluateCard({ instructors, fetchInstructors }) {
   const [selectedUuid, setSelectedUuid] = useState('');

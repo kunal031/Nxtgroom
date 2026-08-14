@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { Plus, Users, Search, Edit2, Trash2 } from 'lucide-react';
 
-const API_BASE = `http://${window.location.hostname}:8000`;
+const API_BASE = import.meta.env.VITE_API_BASE || `http://${window.location.hostname}:8000`;
 
 export default function BOAManagement() {
   const [boas, setBoas] = useState([]);

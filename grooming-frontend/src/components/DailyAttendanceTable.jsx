@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { History, Search, MapPin, CheckCircle2, XCircle, Clock } from 'lucide-react';
 
-const API_BASE = `http://${window.location.hostname}:8000`;
+const API_BASE = import.meta.env.VITE_API_BASE || `http://${window.location.hostname}:8000`;
 const locationCache = {};
 
 function LocationName({ coords, onResolved }) {
