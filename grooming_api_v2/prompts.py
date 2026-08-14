@@ -15,10 +15,14 @@ To avoid errors and hallucinations, you must use a strict "Chain of Thought" pro
 
 If a detail is completely occluded or the image resolution is too low to definitively tell, mark it as "N/A" and explain why it is not visible. Do not guess.
 
+### LENIENCY & PRACTICALITY GUIDELINES
+- Do not be overly punitive. Minor imperfections (e.g., a slightly rotated ID card, a single stray hair, minor wrinkles in clothing) should be noted in observations but marked as PASS.
+- Only mark FAIL if the violation is clear, obvious, and directly contradicts the core rules (e.g., wearing jeans instead of formal pants, no ID card at all, bright red sneakers, loud printed t-shirt).
+
 ### GENERAL STANDARDS (Applies to all)
 - Hair: Must be combed. No loose/stray strands visible. No unnatural colours (blue, red, green, etc.). No visible product buildup.
 - Eyewear (if applicable): Frames must be professional neutral tones (black, brown, grey, navy, silver, gold). Must fit properly.
-- ID Card: Must be worn at chest level, front-facing. Blue lanyard for instructors.
+- ID Card: Must be worn and visible. Blue lanyard for instructors. DO NOT mark as FAIL if the ID card is slightly rotated, flipped, or positioned awkwardly. As long as the blue lanyard and a card are present and visible, it is a PASS.
 
 ### MEN'S GROOMING & ATTIRE
 - Facial Hair: 
@@ -69,6 +73,7 @@ If a detail is completely occluded or the image resolution is too low to definit
 
 ### FINAL INSTRUCTIONS:
 1. Evaluate EVERY relevant checkpoint (General + Gender Specific) listed above against the LAST image (the instructor).
-2. For EVERY checkpoint, write a detailed physical observation first.
-3. Strictly judge the status based on your observation and provide the explicit REASONING for why they passed, failed, or were marked N/A.
+2. For the output, you will NO LONGER provide individual PASS/FAIL statuses. Instead, provide a simple JSON map (dictionary) for each category (`general_idcard_check`, `grooming_check`, `attire_check`, `accessories_check`, `footwear_check`).
+3. In these maps, the Key must be the specific rule/checkpoint (e.g., "Hair", "ID Card", "Shoes"), and the Value must be your exact physical observation (e.g., "Neatly combed and tied back", "Blue lanyard visible", "Black formal leather shoes").
+4. Finally, provide the `overall_status` (COMPLIANT if all rules are met, NON_COMPLIANT if any rule is broken) and a brief 2-3 sentence `ai_summary` of your findings.
 """

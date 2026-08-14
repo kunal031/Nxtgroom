@@ -10,17 +10,14 @@ load_dotenv()
 
 client = OpenAI(api_key=os.environ.get("OPENAI_API_KEY"))
 
-class GroomingCheckResult(BaseModel):
-    checkpoint: str = Field(description="The specific rule or checkpoint being evaluated.")
-    observation: str = Field(description="Describe EXACTLY what you physically see in the instructor's image regarding this checkpoint.")
-    status: Literal["PASS", "FAIL", "N/A"] = Field(description="PASS if compliant, FAIL if not compliant, N/A if it cannot be verified.")
-    reasoning: str = Field(description="Explanation of why the observation results in a PASS or FAIL based on the strict rules and reference images.")
-
 class GroomingReport(BaseModel):
-    gender_detected: Literal["MALE", "FEMALE"] = Field(description="The gender of the instructor, detected or provided.")
-    checks: List[GroomingCheckResult] = Field(description="List of all evaluations against the grooming standards.")
-    overall_status: Literal["COMPLIANT", "NON-COMPLIANT"] = Field(description="COMPLIANT if all applicable checks PASS. NON-COMPLIANT if any check is a FAIL.")
-    summary: str = Field(description="A short 2-3 sentence summary of the evaluation.")
+    overall_status: Literal["COMPLIANT", "NON_COMPLIANT"] = Field(description="COMPLIANT if all applicable checks pass. NON_COMPLIANT if any check fails.")
+    ai_summary: str = Field(description="A short 2-3 sentence summary of the evaluation.")
+    general_idcard_check: dict[str, str] = Field(description="Dictionary of checks. Key is checkpoint name (e.g. 'ID Card Visible'), Value is the detailed observation of the checkpoint.")
+    grooming_check: dict[str, str] = Field(description="Dictionary of grooming checks (Hair, Beard, Makeup, etc.). Key is checkpoint name, Value is observation.")
+    attire_check: dict[str, str] = Field(description="Dictionary of attire checks. Key is checkpoint name, Value is observation.")
+    accessories_check: dict[str, str] = Field(description="Dictionary of accessory checks. Key is checkpoint name, Value is observation.")
+    footwear_check: dict[str, str] = Field(description="Dictionary of footwear checks. Key is checkpoint name, Value is observation.")
 
 def encode_image(image_path: str) -> str:
     with open(image_path, "rb") as image_file:
