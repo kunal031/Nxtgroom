@@ -3,7 +3,8 @@ from fastapi.middleware.cors import CORSMiddleware
 from fastapi.security import OAuth2PasswordRequestForm
 import os
 import shutil
-from datetime import datetime
+from datetime import datetime, timedelta
+from typing import List, Optional
 from bson import ObjectId
 from bson.errors import InvalidId
 
@@ -17,7 +18,7 @@ def get_db_id(id_str: str):
 
 from models import (
     UserSchema, BOASchema, InstructorSchema, AttendanceSchema, EvaluationSchema,
-    RoleEnum, BOACreate, InstructorCreate, AttendanceCheckOutReq,
+    RoleEnum, BOACreate, BOAUpdate, InstructorCreate, AttendanceCheckOutReq,
     CollegeSchema, CollegeCreate
 )
 from auth import (
@@ -114,6 +115,49 @@ async def list_boas(current_user: dict = Depends(get_current_user)):
         boa["_id"] = str(boa["_id"])
     return boas
 
+@app.put("/api/v2/boas/{boa_id}")
+async def update_boa(boa_id: str, boa_in: BOAUpdate, current_user: dict = Depends(get_current_user)):
+    db = get_db()
+    if current_user.get("role") != RoleEnum.SUPER_ADMIN.value:
+        raise HTTPException(status_code=403, detail="Not authorized")
+        
+    boa_db_id = get_db_id(boa_id)
+    existing_boa = await db.boas.find_one({"$or": [{"_id": boa_id}, {"_id": boa_db_id}]})
+    if not existing_boa:
+        raise HTTPException(status_code=404, detail="BOA not found")
+        
+    update_data = {
+        "employee_id": boa_in.employee_id,
+        "name": boa_in.name,
+        "college_id": boa_in.college_id
+    }
+    
+    await db.boas.update_one({"_id": existing_boa["_id"]}, {"$set": update_data})
+    
+    user_update_data = {"email": boa_in.email}
+    if boa_in.password:
+        user_update_data["password_hash"] = get_password_hash(boa_in.password)
+        
+    await db.users.update_one({"reference_id": existing_boa["_id"]}, {"$set": user_update_data})
+    
+    return {"message": "BOA updated successfully"}
+
+@app.delete("/api/v2/boas/{boa_id}")
+async def delete_boa(boa_id: str, current_user: dict = Depends(get_current_user)):
+    db = get_db()
+    if current_user.get("role") != RoleEnum.SUPER_ADMIN.value:
+        raise HTTPException(status_code=403, detail="Not authorized")
+        
+    boa_db_id = get_db_id(boa_id)
+    existing_boa = await db.boas.find_one({"$or": [{"_id": boa_id}, {"_id": boa_db_id}]})
+    if not existing_boa:
+        raise HTTPException(status_code=404, detail="BOA not found")
+        
+    await db.boas.delete_one({"_id": existing_boa["_id"]})
+    await db.users.delete_one({"reference_id": existing_boa["_id"]})
+    
+    return {"message": "BOA deleted successfully"}
+
 
 # --- COLLEGES ---
 
@@ -137,6 +181,37 @@ async def list_colleges(current_user: dict = Depends(get_current_user)):
     for college in colleges:
         college["_id"] = str(college["_id"])
     return colleges
+
+@app.put("/api/v2/colleges/{college_id}")
+async def update_college(college_id: str, college_in: CollegeCreate, current_user: dict = Depends(get_current_user)):
+    db = get_db()
+    if current_user.get("role") != RoleEnum.SUPER_ADMIN.value:
+        raise HTTPException(status_code=403, detail="Not authorized")
+    
+    col_db_id = get_db_id(college_id)
+    existing = await db.colleges.find_one({"$or": [{"_id": college_id}, {"_id": col_db_id}]})
+    if not existing:
+        raise HTTPException(status_code=404, detail="College not found")
+        
+    await db.colleges.update_one(
+        {"_id": existing["_id"]},
+        {"$set": {"name": college_in.name, "location": college_in.location}}
+    )
+    return {"message": "College updated successfully"}
+
+@app.delete("/api/v2/colleges/{college_id}")
+async def delete_college(college_id: str, current_user: dict = Depends(get_current_user)):
+    db = get_db()
+    if current_user.get("role") != RoleEnum.SUPER_ADMIN.value:
+        raise HTTPException(status_code=403, detail="Not authorized")
+        
+    col_db_id = get_db_id(college_id)
+    existing = await db.colleges.find_one({"$or": [{"_id": college_id}, {"_id": col_db_id}]})
+    if not existing:
+        raise HTTPException(status_code=404, detail="College not found")
+        
+    await db.colleges.delete_one({"_id": existing["_id"]})
+    return {"message": "College deleted successfully"}
 
 
 # --- INSTRUCTORS ---
@@ -163,7 +238,16 @@ async def create_instructor(ins_in: InstructorCreate, current_user: dict = Depen
 @app.get("/api/v2/instructors")
 async def get_instructors(current_user: dict = Depends(get_current_user)):
     db = get_db()
-    instructors = await db.instructors.find({}).to_list(length=1000)
+    
+    query = {}
+    if current_user.get("role") == RoleEnum.BOA.value:
+        user_doc = await db.users.find_one({"email": current_user["sub"]})
+        if user_doc and user_doc.get("reference_id"):
+            boa_doc = await db.boas.find_one({"_id": user_doc["reference_id"]})
+            if boa_doc and boa_doc.get("college_id"):
+                query["college_id"] = boa_doc["college_id"]
+                
+    instructors = await db.instructors.find(query).to_list(length=1000)
     for ins in instructors:
         ins["_id"] = str(ins["_id"])
         ins_db_id = get_db_id(ins["_id"])
@@ -241,7 +325,7 @@ async def process_ai_evaluation(attendance_id: str, filepath: str, gender: str, 
             print(f"AI Eval Error: {report['error']}")
             await db.attendance.update_one(
                 {"_id": attendance_id}, 
-                {"$set": {"status": "fail", "remarks": report["error"]}}
+                {"$set": {"status": "failed", "remarks": report["error"]}}
             )
             return
             
@@ -250,16 +334,16 @@ async def process_ai_evaluation(attendance_id: str, filepath: str, gender: str, 
             photo_evidence_url=filepath,
             overall_status=report.get("overall_status"),
             ai_summary=report.get("ai_summary", ""),
-            general_idcard_check=report.get("general_idcard_check", {}),
-            grooming_check=report.get("grooming_check", {}),
-            attire_check=report.get("attire_check", {}),
-            accessories_check=report.get("accessories_check", {}),
-            footwear_check=report.get("footwear_check", {})
+            general_idcard_check=report.get("general_idcard_check", []),
+            grooming_check=report.get("grooming_check", []),
+            attire_check=report.get("attire_check", []),
+            accessories_check=report.get("accessories_check", []),
+            footwear_check=report.get("footwear_check", [])
         )
         
         await db.evaluations.insert_one(eval_doc.dict(by_alias=True))
         
-        status_val = "done" if report.get("overall_status") == "COMPLIANT" else "fail"
+        status_val = "done"
         await db.attendance.update_one(
             {"_id": attendance_id}, 
             {"$set": {"status": status_val, "remarks": report.get("ai_summary", "")}}
@@ -272,7 +356,7 @@ async def process_ai_evaluation(attendance_id: str, filepath: str, gender: str, 
 
     except Exception as e:
         print(f"Background task failed: {e}")
-        await db.attendance.update_one({"_id": attendance_id}, {"$set": {"status": "fail", "remarks": "AI processing error"}})
+        await db.attendance.update_one({"_id": attendance_id}, {"$set": {"status": "failed", "remarks": "AI processing error"}})
 
 @app.post("/api/v2/attendance/check-in")
 async def check_in(
@@ -338,11 +422,29 @@ async def check_out(req: AttendanceCheckOutReq, current_user: dict = Depends(get
     return {"message": "Check-out successful."}
 
 @app.get("/api/v2/attendance/today")
-async def get_today_attendance(current_user: dict = Depends(get_current_user)):
+async def get_today_attendance(date: Optional[str] = None, current_user: dict = Depends(get_current_user)):
     db = get_db()
     
-    # We will just fetch the latest 100 for now. In production, filter by date >= start_of_today
-    attendances = await db.attendance.find({}).sort("check_in_time", -1).limit(100).to_list(length=100)
+    query = {}
+    if date:
+        try:
+            start_date = datetime.strptime(date, "%Y-%m-%d")
+            end_date = start_date + timedelta(days=1)
+            query["check_in_time"] = {"$gte": start_date, "$lt": end_date}
+        except ValueError:
+            pass
+            
+    if current_user.get("role") == RoleEnum.BOA.value:
+        user_doc = await db.users.find_one({"email": current_user["sub"]})
+        if user_doc and user_doc.get("reference_id"):
+            boa_doc = await db.boas.find_one({"_id": user_doc["reference_id"]})
+            if boa_doc and boa_doc.get("college_id"):
+                college_id = boa_doc["college_id"]
+                col_instructors = await db.instructors.find({"college_id": college_id}, {"_id": 1}).to_list(length=1000)
+                ins_ids = [str(i["_id"]) for i in col_instructors]
+                query["instructor_id"] = {"$in": ins_ids}
+            
+    attendances = await db.attendance.find(query).sort("check_in_time", -1).limit(500).to_list(length=500)
     
     result = []
     for att in attendances:
@@ -352,9 +454,17 @@ async def get_today_attendance(current_user: dict = Depends(get_current_user)):
         if ins:
             att["instructor_name"] = ins.get("name", "Unknown")
             att["instructor_role"] = ins.get("role", "Unknown")
+            college_id = ins.get("college_id")
+            if college_id:
+                col_db_id = get_db_id(college_id)
+                col = await db.colleges.find_one({"$or": [{"_id": college_id}, {"_id": col_db_id}]})
+                att["college_name"] = col.get("name") if col else "Unknown College"
+            else:
+                att["college_name"] = "No College"
         else:
             att["instructor_name"] = "Unknown"
             att["instructor_role"] = "Unknown"
+            att["college_name"] = "Unknown"
         result.append(att)
         
     return result

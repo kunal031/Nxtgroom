@@ -73,9 +73,9 @@ export default function InstructorDetail({ record, onBack }) {
   };
 
   const getStatusBadge = (status) => {
-    if (status === 'done') return <span className="inline-flex items-center gap-1 px-3 py-1.5 rounded-full text-sm font-bold bg-emerald-50 text-emerald-600 border border-emerald-200"><CheckCircle2 size={16} /> Compliant</span>;
-    if (status === 'fail') return <span className="inline-flex items-center gap-1 px-3 py-1.5 rounded-full text-sm font-bold bg-rose-50 text-rose-600 border border-rose-200"><XCircle size={16} /> Failed</span>;
-    return <span className="inline-flex items-center gap-1 px-3 py-1.5 rounded-full text-sm font-bold bg-amber-50 text-amber-600 border border-amber-200"><Clock size={16} /> Pending AI</span>;
+    if (status === 'done') return <span className="inline-flex items-center gap-1 px-3 py-1.5 rounded-full text-sm font-bold bg-emerald-50 text-emerald-600 border border-emerald-200"><CheckCircle2 size={16} /> Done</span>;
+    if (status === 'fail' || status === 'failed' || status === 'error' || status === 'non_compliant') return <span className="inline-flex items-center gap-1 px-3 py-1.5 rounded-full text-sm font-bold bg-rose-50 text-rose-600 border border-rose-200"><XCircle size={16} /> Failed</span>;
+    return <span className="inline-flex items-center gap-1 px-3 py-1.5 rounded-full text-sm font-bold bg-amber-50 text-amber-600 border border-amber-200"><Clock size={16} /> Pending</span>;
   };
 
   const renderDictionarySection = (title, items) => {

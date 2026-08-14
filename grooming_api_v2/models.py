@@ -86,6 +86,13 @@ class BOACreate(BaseModel):
     password: str
     college_id: str
 
+class BOAUpdate(BaseModel):
+    employee_id: str
+    name: str
+    email: EmailStr
+    password: Optional[str] = None
+    college_id: str
+
 class InstructorCreate(BaseModel):
     employee_id: str
     name: str

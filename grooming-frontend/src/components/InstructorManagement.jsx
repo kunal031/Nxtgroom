@@ -51,6 +51,10 @@ export default function InstructorManagement() {
       return;
     }
     
+    const payload = { ...formData };
+    if (!payload.email) payload.email = null;
+    if (!payload.phone_no) payload.phone_no = null;
+    
     try {
       const token = localStorage.getItem('nxtwave_token');
       const url = isEditMode ? `${API_BASE}/api/v2/instructors/${editingId}` : `${API_BASE}/api/v2/instructors`;
@@ -60,14 +64,18 @@ export default function InstructorManagement() {
           'Content-Type': 'application/json',
           'Authorization': `Bearer ${token}` 
         },
-        body: JSON.stringify(formData)
+        body: JSON.stringify(payload)
       });
       if (res.ok) {
         closeModal();
         fetchData();
       } else {
         const errorData = await res.json();
-        alert(`Error: ${errorData.detail}`);
+        let errorMsg = errorData.detail;
+        if (Array.isArray(errorData.detail)) {
+          errorMsg = errorData.detail.map(err => `${err.loc.join('.')}: ${err.msg}`).join(', ');
+        }
+        alert(`Error: ${errorMsg}`);
       }
     } catch (err) {
       console.error("Failed to save instructor", err);
@@ -108,7 +116,7 @@ export default function InstructorManagement() {
       employee_id: ins.employee_id,
       role: ins.role || 'Trainee',
       gender: ins.gender || 'Male',
-      college_id: ins.college_id,
+      college_id: ins.college_id || '',
       email: ins.email || '',
       phone_no: ins.phone_no || ''
     });
