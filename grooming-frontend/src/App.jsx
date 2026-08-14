@@ -65,7 +65,7 @@ export default function App() {
   }
 
   const filteredInstructors = instructors.filter(ins => 
-    ins.name.toLowerCase().includes(search.toLowerCase()) || 
+    (ins.name || '').toLowerCase().includes(search.toLowerCase()) || 
     (ins.uuid || ins.employee_id || '').toLowerCase().includes(search.toLowerCase())
   );
 

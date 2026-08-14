@@ -1,5 +1,5 @@
 import React from 'react';
-import { LayoutGrid, Users, ShieldCheck, X, History } from 'lucide-react';
+import { LayoutGrid, Users, ShieldCheck, X, History, Building2, UserCog } from 'lucide-react';
 
 export default function Sidebar({ isSidebarOpen, setIsSidebarOpen, activeTab, navigate }) {
   return (
@@ -21,7 +21,7 @@ export default function Sidebar({ isSidebarOpen, setIsSidebarOpen, activeTab, na
             <h2 className="font-bold text-lg leading-tight text-slate-800">FacultyTrack</h2>
           </div>
         </div>
-        <p className="text-[10px] font-bold tracking-widest text-slate-400 mt-2 uppercase">Management Suite</p>
+      
       </div>
 
       <nav className="flex-1 px-4 space-y-2 overflow-y-auto">

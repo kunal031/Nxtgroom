@@ -62,11 +62,11 @@ class EvaluationSchema(BaseModel):
     photo_evidence_url: str
     overall_status: OverallStatusEnum
     ai_summary: str
-    general_idcard_check: Dict[str, str] = {}
-    grooming_check: Dict[str, str] = {}
-    attire_check: Dict[str, str] = {}
-    accessories_check: Dict[str, str] = {}
-    footwear_check: Dict[str, str] = {}
+    general_idcard_check: list[dict] = []
+    grooming_check: list[dict] = []
+    attire_check: list[dict] = []
+    accessories_check: list[dict] = []
+    footwear_check: list[dict] = []
 
 # --- API Request Models ---
 

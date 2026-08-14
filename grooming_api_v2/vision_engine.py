@@ -10,14 +10,18 @@ load_dotenv()
 
 client = OpenAI(api_key=os.environ.get("OPENAI_API_KEY"))
 
+class CheckItem(BaseModel):
+    checkpoint_name: str = Field(description="Name of the checkpoint (e.g. 'ID Card Visible')")
+    observation: str = Field(description="The detailed observation of the checkpoint")
+
 class GroomingReport(BaseModel):
     overall_status: Literal["COMPLIANT", "NON_COMPLIANT"] = Field(description="COMPLIANT if all applicable checks pass. NON_COMPLIANT if any check fails.")
     ai_summary: str = Field(description="A short 2-3 sentence summary of the evaluation.")
-    general_idcard_check: dict[str, str] = Field(description="Dictionary of checks. Key is checkpoint name (e.g. 'ID Card Visible'), Value is the detailed observation of the checkpoint.")
-    grooming_check: dict[str, str] = Field(description="Dictionary of grooming checks (Hair, Beard, Makeup, etc.). Key is checkpoint name, Value is observation.")
-    attire_check: dict[str, str] = Field(description="Dictionary of attire checks. Key is checkpoint name, Value is observation.")
-    accessories_check: dict[str, str] = Field(description="Dictionary of accessory checks. Key is checkpoint name, Value is observation.")
-    footwear_check: dict[str, str] = Field(description="Dictionary of footwear checks. Key is checkpoint name, Value is observation.")
+    general_idcard_check: list[CheckItem] = Field(description="List of ID Card checks.")
+    grooming_check: list[CheckItem] = Field(description="List of grooming checks.")
+    attire_check: list[CheckItem] = Field(description="List of attire checks.")
+    accessories_check: list[CheckItem] = Field(description="List of accessory checks.")
+    footwear_check: list[CheckItem] = Field(description="List of footwear checks.")
 
 def encode_image(image_path: str) -> str:
     with open(image_path, "rb") as image_file:

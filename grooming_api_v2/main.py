@@ -198,6 +198,38 @@ async def get_instructors(current_user: dict = Depends(get_current_user)):
     return instructors
 
 
+@app.put("/api/v2/instructors/{instructor_id}")
+async def update_instructor(instructor_id: str, ins_in: InstructorCreate, current_user: dict = Depends(get_current_user)):
+    db = get_db()
+    if current_user.get("role") != RoleEnum.SUPER_ADMIN.value:
+        raise HTTPException(status_code=403, detail="Not authorized")
+    
+    ins_db_id = get_db_id(instructor_id)
+    existing = await db.instructors.find_one({"$or": [{"_id": instructor_id}, {"_id": ins_db_id}]})
+    if not existing:
+        raise HTTPException(status_code=404, detail="Instructor not found")
+        
+    await db.instructors.update_one(
+        {"_id": existing["_id"]},
+        {"$set": ins_in.dict()}
+    )
+    return {"message": "Instructor updated successfully"}
+
+
+@app.delete("/api/v2/instructors/{instructor_id}")
+async def delete_instructor(instructor_id: str, current_user: dict = Depends(get_current_user)):
+    db = get_db()
+    if current_user.get("role") != RoleEnum.SUPER_ADMIN.value:
+        raise HTTPException(status_code=403, detail="Not authorized")
+        
+    ins_db_id = get_db_id(instructor_id)
+    result = await db.instructors.delete_one({"$or": [{"_id": instructor_id}, {"_id": ins_db_id}]})
+    if result.deleted_count == 0:
+        raise HTTPException(status_code=404, detail="Instructor not found")
+        
+    return {"message": "Instructor deleted successfully"}
+
+
 # --- ATTENDANCE & BACKGROUND AI ---
 
 async def process_ai_evaluation(attendance_id: str, filepath: str, gender: str, instructor_name: str, instructor_email: str, admin_email: str):
@@ -315,10 +347,14 @@ async def get_today_attendance(current_user: dict = Depends(get_current_user)):
     result = []
     for att in attendances:
         att["_id"] = str(att["_id"])
-        ins = await db.instructors.find_one({"_id": att["instructor_id"]})
+        ins_db_id = get_db_id(att["instructor_id"])
+        ins = await db.instructors.find_one({"$or": [{"_id": att["instructor_id"]}, {"_id": ins_db_id}]})
         if ins:
-            att["instructor_name"] = ins["name"]
-            att["instructor_role"] = ins["role"]
+            att["instructor_name"] = ins.get("name", "Unknown")
+            att["instructor_role"] = ins.get("role", "Unknown")
+        else:
+            att["instructor_name"] = "Unknown"
+            att["instructor_role"] = "Unknown"
         result.append(att)
         
     return result

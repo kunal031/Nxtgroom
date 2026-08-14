@@ -78,15 +78,20 @@ export default function InstructorDetail({ record, onBack }) {
     return <span className="inline-flex items-center gap-1 px-3 py-1.5 rounded-full text-sm font-bold bg-amber-50 text-amber-600 border border-amber-200"><Clock size={16} /> Pending AI</span>;
   };
 
-  const renderDictionarySection = (title, dict) => {
-    if (!dict || Object.keys(dict).length === 0) return null;
+  const renderDictionarySection = (title, items) => {
+    if (!items || items.length === 0) return null;
     return (
       <div className="mb-8">
         <h4 className="text-xs font-bold text-slate-400 uppercase tracking-wider mb-3 border-b border-slate-100 pb-2">{title}</h4>
         <div className="bg-white rounded-xl border border-slate-200 overflow-hidden shadow-sm">
           <table className="w-full text-left text-sm">
             <tbody className="divide-y divide-slate-100">
-              {Object.entries(dict).map(([key, value]) => (
+              {Array.isArray(items) ? items.map((item, idx) => (
+                <tr key={idx} className="hover:bg-slate-50 transition-colors">
+                  <td className="p-4 font-bold text-slate-700 w-1/3 bg-slate-50/50 border-r border-slate-100">{item.checkpoint_name}</td>
+                  <td className="p-4 text-slate-600">{item.observation}</td>
+                </tr>
+              )) : Object.entries(items).map(([key, value]) => (
                 <tr key={key} className="hover:bg-slate-50 transition-colors">
                   <td className="p-4 font-bold text-slate-700 w-1/3 bg-slate-50/50 border-r border-slate-100">{key}</td>
                   <td className="p-4 text-slate-600">{value}</td>
@@ -186,8 +191,10 @@ export default function InstructorDetail({ record, onBack }) {
               <p className="text-sm font-medium">Fetching detailed evaluation...</p>
             </div>
           ) : !evaluation ? (
-            <div className="flex-1 flex items-center justify-center text-slate-400 font-medium bg-slate-50 rounded-xl border border-dashed border-slate-200">
-              No detailed evaluation report found for this session.
+            <div className="flex-1 flex flex-col items-center justify-center text-slate-500 font-medium bg-slate-50 rounded-xl border border-dashed border-slate-200 p-8 text-center gap-2">
+              <XCircle size={32} className="text-slate-300" />
+              <p>No detailed evaluation report found for this session.</p>
+              <p className="text-xs text-slate-400 font-normal">If the AI analysis failed (e.g., missing API key or invalid image), the detailed report won't be generated. Check the "AI Remarks Summary" on the left for errors.</p>
             </div>
           ) : (
             <div className="flex-1 pb-4">
