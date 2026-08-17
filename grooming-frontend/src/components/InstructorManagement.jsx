@@ -187,48 +187,52 @@ export default function InstructorManagement() {
         <div className="overflow-x-auto">
           <table className="w-full text-left border-collapse">
             <thead>
-              <tr className="bg-slate-50 border-b border-slate-200 text-xs font-bold text-slate-500 uppercase tracking-wider">
+              <tr className="bg-slate-50 border-b border-slate-200 text-xs font-bold text-slate-500 uppercase tracking-wider whitespace-nowrap">
                 <th className="p-4">Employee ID</th>
                 <th className="p-4">Instructor Name</th>
+                <th className="p-4">Gender</th>
                 <th className="p-4">Role</th>
                 <th className="p-4">College</th>
-                <th className="p-4">Contact</th>
+                <th className="p-4">Email</th>
+                <th className="p-4">Phone Number</th>
                 <th className="p-4 text-right">Actions</th>
               </tr>
             </thead>
             <tbody className="divide-y divide-slate-100">
               {loading ? (
                 <tr>
-                  <td colSpan="6" className="p-8 text-center text-slate-400 font-medium">Loading instructors...</td>
+                  <td colSpan="8" className="p-8 text-center text-slate-400 font-medium">Loading instructors...</td>
                 </tr>
               ) : filteredInstructors.length === 0 ? (
                 <tr>
-                  <td colSpan="6" className="p-8 text-center text-slate-400 font-medium">No instructors found.</td>
+                  <td colSpan="8" className="p-8 text-center text-slate-400 font-medium">No instructors found.</td>
                 </tr>
               ) : (
                 filteredInstructors.map(ins => (
                   <tr key={ins._id} className="hover:bg-slate-50 transition-colors group">
-                    <td className="p-4 text-xs font-mono font-medium text-slate-500">{ins.employee_id}</td>
-                    <td className="p-4 font-bold text-slate-800">
+                    <td className="p-4 text-xs font-mono font-medium text-slate-500 whitespace-nowrap">{ins.employee_id}</td>
+                    <td className="p-4 font-bold text-slate-800 whitespace-nowrap">
                       {ins.name}
-                      <div className="text-[11px] font-medium text-slate-400 uppercase tracking-wider mt-0.5">{ins.gender}</div>
                     </td>
-                    <td className="p-4">
+                    <td className="p-4 whitespace-nowrap">
+                      <div className="text-[11px] font-medium text-slate-500 uppercase tracking-wider">{ins.gender}</div>
+                    </td>
+                    <td className="p-4 whitespace-nowrap">
                       <span className="inline-flex px-2.5 py-1 bg-indigo-50 text-indigo-700 font-bold text-[11px] rounded-md border border-indigo-100">
                         {ins.role}
                       </span>
                     </td>
-                    <td className="p-4 text-sm font-semibold text-slate-700 flex items-center gap-1.5 pt-5">
+                    <td className="p-4 text-sm font-semibold text-slate-700 flex items-center gap-1.5 pt-5 whitespace-nowrap">
                       <Building2 size={14} className="text-slate-400" />
                       {getCollegeName(ins.college_id)}
                     </td>
-                    <td className="p-4">
-                      <div className="flex flex-col gap-1.5">
-                        {ins.email ? <span className="text-xs font-medium text-slate-500 flex items-center gap-1.5"><Mail size={12} className="text-slate-400"/> {ins.email}</span> : <span className="text-xs text-slate-300">-</span>}
-                        {ins.phone_no ? <span className="text-xs font-medium text-slate-500 flex items-center gap-1.5"><Phone size={12} className="text-slate-400"/> {ins.phone_no}</span> : null}
-                      </div>
+                    <td className="p-4 whitespace-nowrap">
+                      {ins.email ? <span className="text-xs font-medium text-slate-500 flex items-center gap-1.5"><Mail size={12} className="text-slate-400"/> {ins.email}</span> : <span className="text-xs text-slate-300">-</span>}
                     </td>
-                    <td className="p-4 text-right">
+                    <td className="p-4 whitespace-nowrap">
+                      {ins.phone_no ? <span className="text-xs font-medium text-slate-500 flex items-center gap-1.5"><Phone size={12} className="text-slate-400"/> {ins.phone_no}</span> : <span className="text-xs text-slate-300">-</span>}
+                    </td>
+                    <td className="p-4 text-right whitespace-nowrap">
                       <div className="flex items-center justify-end gap-2 opacity-0 group-hover:opacity-100 transition-opacity">
                         <button onClick={() => openEditModal(ins)} className="p-1.5 text-indigo-600 hover:bg-indigo-50 rounded-lg transition-colors">
                           <Edit2 size={16} />

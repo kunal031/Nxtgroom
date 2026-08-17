@@ -162,39 +162,40 @@ export default function BOAManagement() {
         <div className="overflow-x-auto">
           <table className="w-full text-left border-collapse">
             <thead>
-              <tr className="bg-slate-50 border-b border-slate-200 text-xs font-bold text-slate-500 uppercase tracking-wider">
+              <tr className="bg-slate-50 border-b border-slate-200 text-xs font-bold text-slate-500 uppercase tracking-wider whitespace-nowrap">
                 <th className="p-4">Employee ID</th>
                 <th className="p-4">BOA Name</th>
                 <th className="p-4">College Name</th>
-                <th className="p-4">Contact</th>
+                <th className="p-4">Email</th>
+                <th className="p-4">Phone Number</th>
                 <th className="p-4 text-right">Actions</th>
               </tr>
             </thead>
             <tbody className="divide-y divide-slate-100">
               {loading ? (
                 <tr>
-                  <td colSpan="5" className="p-8 text-center text-slate-400">Loading BOAs...</td>
+                  <td colSpan="6" className="p-8 text-center text-slate-400">Loading BOAs...</td>
                 </tr>
               ) : boas.length === 0 ? (
                 <tr>
-                  <td colSpan="5" className="p-8 text-center text-slate-400">No BOAs found.</td>
+                  <td colSpan="6" className="p-8 text-center text-slate-400">No BOAs found.</td>
                 </tr>
               ) : (
                 boas.map(boa => (
                   <tr key={boa._id} className="hover:bg-slate-50 transition-colors group">
-                    <td className="p-4 text-xs font-mono font-medium text-slate-500">{boa.employee_id}</td>
-                    <td className="p-4 font-bold text-slate-800">{boa.name}</td>
-                    <td className="p-4 text-sm font-semibold text-slate-700 flex items-center gap-1.5 pt-5">
+                    <td className="p-4 text-xs font-mono font-medium text-slate-500 whitespace-nowrap">{boa.employee_id}</td>
+                    <td className="p-4 font-bold text-slate-800 whitespace-nowrap">{boa.name}</td>
+                    <td className="p-4 text-sm font-semibold text-slate-700 flex items-center gap-1.5 pt-5 whitespace-nowrap">
                       <Building2 size={14} className="text-slate-400" />
                       {getCollegeName(boa.college_id)}
                     </td>
-                    <td className="p-4">
-                      <div className="flex flex-col gap-1.5">
-                        {boa.email ? <span className="text-xs font-medium text-slate-500 flex items-center gap-1.5"><Mail size={12} className="text-slate-400"/> {boa.email}</span> : <span className="text-xs text-slate-300">-</span>}
-                        {boa.phone_no ? <span className="text-xs font-medium text-slate-500 flex items-center gap-1.5"><Phone size={12} className="text-slate-400"/> {boa.phone_no}</span> : null}
-                      </div>
+                    <td className="p-4 whitespace-nowrap">
+                      {boa.email ? <span className="text-xs font-medium text-slate-500 flex items-center gap-1.5"><Mail size={12} className="text-slate-400"/> {boa.email}</span> : <span className="text-xs text-slate-300">-</span>}
                     </td>
-                    <td className="p-4 text-right">
+                    <td className="p-4 whitespace-nowrap">
+                      {boa.phone_no ? <span className="text-xs font-medium text-slate-500 flex items-center gap-1.5"><Phone size={12} className="text-slate-400"/> {boa.phone_no}</span> : <span className="text-xs text-slate-300">-</span>}
+                    </td>
+                    <td className="p-4 text-right whitespace-nowrap">
                       <div className="flex items-center justify-end gap-2 opacity-0 group-hover:opacity-100 transition-opacity">
                         <button onClick={() => openEditModal(boa)} className="p-1.5 text-indigo-600 hover:bg-indigo-50 rounded-lg transition-colors">
                           <Edit2 size={16} />

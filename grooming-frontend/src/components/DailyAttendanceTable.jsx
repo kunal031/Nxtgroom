@@ -189,12 +189,17 @@ export default function DailyAttendanceTable({ onRowClick }) {
         </div>
         
         <div className="flex items-center gap-3 w-full overflow-x-auto pb-2 2xl:pb-0 scrollbar-hide">
-          <input 
-            type="date"
-            value={dateFilter}
-            onChange={(e) => setDateFilter(e.target.value)}
-            className="px-4 py-2 rounded-xl border border-slate-200 text-sm focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 outline-none shadow-sm text-slate-600"
-          />
+          <div className="relative flex-1 md:flex-none">
+            <Search size={18} className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" />
+            <input 
+              type="text" 
+              placeholder="Search Name ..." 
+              className="pl-10 pr-4 py-2 w-full md:w-64 rounded-xl border border-slate-200 text-sm focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 outline-none shadow-sm"
+              value={search}
+              onChange={(e) => setSearch(e.target.value)}
+            />
+          </div>
+
           <select 
             value={collegeFilter}
             onChange={(e) => setCollegeFilter(e.target.value)}
@@ -211,16 +216,12 @@ export default function DailyAttendanceTable({ onRowClick }) {
             <option value="">All Roles</option>
             {uniqueRoles.map(r => <option key={r} value={r}>{r}</option>)}
           </select>
-          <div className="relative flex-1 md:flex-none">
-            <Search size={18} className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" />
-            <input 
-              type="text" 
-              placeholder="Search Name or Location..." 
-              className="pl-10 pr-4 py-2 w-full md:w-64 rounded-xl border border-slate-200 text-sm focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 outline-none shadow-sm"
-              value={search}
-              onChange={(e) => setSearch(e.target.value)}
-            />
-          </div>
+          <input 
+            type="date"
+            value={dateFilter}
+            onChange={(e) => setDateFilter(e.target.value)}
+            className="px-4 py-2 rounded-xl border border-slate-200 text-sm focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 outline-none shadow-sm text-slate-600"
+          />
           <button
             onClick={() => setShowExport(true)}
             className="flex items-center gap-2 bg-indigo-50 text-indigo-600 px-4 py-2 rounded-xl text-sm font-bold hover:bg-indigo-100 transition-colors border border-indigo-200"
@@ -234,15 +235,15 @@ export default function DailyAttendanceTable({ onRowClick }) {
         <div className="overflow-x-auto flex-1">
           <table className="w-full text-left border-collapse min-w-[900px]">
             <thead className="sticky top-0 bg-slate-50 z-10 shadow-sm">
-              <tr className="border-b border-slate-200 text-xs font-bold text-slate-500 uppercase tracking-wider">
-                <th className="p-4">Instructor Name</th>
-                <th className="p-4">Role</th>
-                <th className="p-4">Date</th>
-                <th className="p-4">Check-In</th>
-                <th className="p-4">Check-Out</th>
-                <th className="p-4">Location</th>
-                <th className="p-4">Status</th>
-                <th className="p-4 w-1/4">Remark</th>
+              <tr className="border-b border-slate-200 text-xs font-bold text-slate-500 uppercase tracking-wider whitespace-nowrap">
+                <th className="px-4 py-2.5">Instructor Name</th>
+                <th className="px-4 py-2.5">Role</th>
+                <th className="px-4 py-2.5">Date</th>
+                <th className="px-4 py-2.5">Check-In</th>
+                <th className="px-4 py-2.5">Check-Out</th>
+                <th className="px-4 py-2.5">Location</th>
+                <th className="px-4 py-2.5">Status</th>
+                <th className="px-4 py-2.5 w-1/4">Remark</th>
               </tr>
             </thead>
             <tbody className="divide-y divide-slate-100">
@@ -261,20 +262,20 @@ export default function DailyAttendanceTable({ onRowClick }) {
                     onClick={() => r.status !== 'pending' && onRowClick(r)}
                     className={`transition-colors ${r.status !== 'pending' ? 'hover:bg-slate-50 cursor-pointer' : 'opacity-80'}`}
                   >
-                    <td className="p-4 font-bold text-slate-800">{r.instructor_name}</td>
-                    <td className="p-4 text-sm font-medium text-slate-500">{r.instructor_role}</td>
-                    <td className="p-4 text-sm font-medium text-slate-600">{formatDate(r.date)}</td>
-                    <td className="p-4 text-sm font-bold text-slate-700">{formatTime(r.check_in_time)}</td>
-                    <td className="p-4 text-sm font-bold text-slate-700">{formatTime(r.check_out_time)}</td>
-                    <td className="p-4 text-sm text-slate-500">
+                    <td className="px-4 py-2.5 font-bold text-slate-800 whitespace-nowrap">{r.instructor_name}</td>
+                    <td className="px-4 py-2.5 text-sm font-medium text-slate-500 whitespace-nowrap">{r.instructor_role}</td>
+                    <td className="px-4 py-2.5 text-sm font-medium text-slate-600 whitespace-nowrap">{formatDate(r.date)}</td>
+                    <td className="px-4 py-2.5 text-sm font-bold text-slate-700 whitespace-nowrap">{formatTime(r.check_in_time)}</td>
+                    <td className="px-4 py-2.5 text-sm font-bold text-slate-700 whitespace-nowrap">{formatTime(r.check_out_time)}</td>
+                    <td className="px-4 py-2.5 text-sm text-slate-500 whitespace-nowrap">
                       {r.location_coordinates ? <LocationName coords={r.location_coordinates} onResolved={(name) => {
                         if (resolvedLocations[r._id] !== name) {
                           setResolvedLocations(prev => ({...prev, [r._id]: name}));
                         }
                       }} /> : '--'}
                     </td>
-                    <td className="p-4">{getStatusBadge(r.status)}</td>
-                    <td className="p-4 text-sm text-slate-500 max-w-xs">
+                    <td className="px-4 py-2.5 whitespace-nowrap">{getStatusBadge(r.status)}</td>
+                    <td className="px-4 py-2.5 text-sm text-slate-500 max-w-xs">
                       {(() => {
                         if (!r.remarks) return '--';
                         const match = r.remarks.match(/^\[(.*?)\]\s*(.*)$/);
