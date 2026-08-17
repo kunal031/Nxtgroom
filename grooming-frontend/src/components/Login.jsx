@@ -45,6 +45,8 @@ export default function Login({ onLogin }) {
       
       localStorage.setItem('nxtwave_token', data.access_token);
       localStorage.setItem('nxtwave_role', data.role);
+      localStorage.setItem('nxtwave_email', data.email);
+      localStorage.setItem('nxtwave_name', data.name);
       onLogin(data.access_token, data.role);
       
     } catch (err) {
@@ -113,7 +115,6 @@ export default function Login({ onLogin }) {
             <img src="/logo.png" alt="FacultyTrack Logo" className="w-full h-full object-contain drop-shadow-sm mix-blend-multiply" />
           </div>
           <h2 className="text-2xl font-extrabold text-slate-800 tracking-tight">Faculty<span className="text-indigo-600">Track</span></h2>
-          <p className="text-sm font-medium text-slate-400 mt-1 uppercase tracking-widest">Management Suite</p>
         </div>
 
         {error && (

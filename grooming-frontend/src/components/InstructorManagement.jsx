@@ -274,11 +274,15 @@ export default function InstructorManagement() {
               <div className="grid grid-cols-2 gap-4">
                 <div>
                   <label className="block text-[11px] font-bold text-slate-500 uppercase tracking-wider mb-1.5">Role</label>
-                  <select required className="w-full rounded-xl border border-slate-200 p-3 text-sm focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 outline-none transition-all bg-white" value={formData.role} onChange={e => setFormData({...formData, role: e.target.value})}>
-                    <option value="Trainee">Trainee</option>
-                    <option value="Senior Instructor">Senior Instructor</option>
-                    <option value="Lead Instructor">Lead Instructor</option>
-                  </select>
+                  <input list="roleOptions" required placeholder="Select or type role..." className="w-full rounded-xl border border-slate-200 p-3 text-sm focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 outline-none transition-all bg-white" value={formData.role} onChange={e => setFormData({...formData, role: e.target.value})} />
+                  <datalist id="roleOptions">
+                    <option value="Trainee" />
+                    <option value="Senior Instructor" />
+                    <option value="Lead Instructor" />
+                    {Array.from(new Set(instructors.map(ins => ins.role).filter(r => r && !['Trainee', 'Senior Instructor', 'Lead Instructor'].includes(r)))).map(r => (
+                      <option key={r} value={r} />
+                    ))}
+                  </datalist>
                 </div>
                 <div>
                   <label className="block text-[11px] font-bold text-slate-500 uppercase tracking-wider mb-1.5">Gender</label>
