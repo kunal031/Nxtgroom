@@ -29,7 +29,10 @@ function localStorageProvider() {
 export default function App() {
   const [authToken, setAuthToken] = useState(localStorage.getItem('nxtwave_token'));
   const [userRole, setUserRole] = useState(localStorage.getItem('nxtwave_role'));
-  const [activeTab, setActiveTab] = useState(localStorage.getItem('nxtwave_active_tab') || 'overview'); // 'overview' | 'instructors'
+  const [activeTab, setActiveTab] = useState(() => {
+    const hash = window.location.hash.replace('#', '');
+    return hash || localStorage.getItem('nxtwave_active_tab') || 'overview';
+  });
   const [instructors, setInstructors] = useState([]);
   const [loading, setLoading] = useState(true);
   const [search, setSearch] = useState('');
@@ -39,6 +42,20 @@ export default function App() {
 
   useEffect(() => {
     localStorage.setItem('nxtwave_active_tab', activeTab);
+    if (window.location.hash !== `#${activeTab}`) {
+      window.location.hash = activeTab;
+    }
+  }, [activeTab]);
+
+  useEffect(() => {
+    const handleHashChange = () => {
+      const hash = window.location.hash.replace('#', '');
+      if (hash && hash !== activeTab) {
+        setActiveTab(hash);
+      }
+    };
+    window.addEventListener('hashchange', handleHashChange);
+    return () => window.removeEventListener('hashchange', handleHashChange);
   }, [activeTab]);
 
   const handleLogin = (token, role) => {
@@ -54,6 +71,7 @@ export default function App() {
     setAuthToken(null);
     setUserRole(null);
     setActiveTab('overview');
+    window.location.hash = '';
   };
 
   const fetchInstructors = async () => {

@@ -18,6 +18,7 @@ class GroomingReport(BaseModel):
     overall_status: Literal["COMPLIANT", "NON_COMPLIANT"] = Field(description="COMPLIANT if all applicable checks pass. NON_COMPLIANT if any check fails.")
     average_performance_tag: Literal["Poor", "Average", "Good", "Excellent"] = Field(description="A tag evaluating the average performance of the instructor's grooming.")
     ai_summary: str = Field(description="A short 2-3 sentence summary of the evaluation.")
+    attire_type: str = Field(description="The primary attire worn by the instructor (e.g., 'Formal Attire', 'Saree', 'Kurta', 'T-Shirt', 'Unknown').")
     general_idcard_check: list[CheckItem] = Field(description="List of ID Card checks.")
     grooming_check: list[CheckItem] = Field(description="List of grooming checks.")
     attire_check: list[CheckItem] = Field(description="List of attire checks.")

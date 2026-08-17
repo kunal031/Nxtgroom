@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { ArrowLeft, User, MapPin, Clock, Calendar, CheckCircle2, XCircle } from 'lucide-react';
+import { ArrowLeft, User, MapPin, Clock, Calendar, CheckCircle2, XCircle, Shirt } from 'lucide-react';
 
 const API_BASE = import.meta.env.VITE_API_BASE || `http://${window.location.hostname}:8000`;
 
@@ -136,7 +136,14 @@ export default function InstructorDetail({ record, onBack }) {
             </div>
             <h3 className="text-2xl font-extrabold text-slate-800">{record.instructor_name}</h3>
             <p className="text-sm font-bold text-slate-400 uppercase tracking-widest mt-1.5 mb-5">{record.instructor_role}</p>
-            {getStatusBadge(record.status)}
+            <div className="flex items-center justify-center gap-2">
+              {getStatusBadge(record.status)}
+              {evaluation && evaluation.attire_type && evaluation.attire_type !== "Unknown" && (
+                <span className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full text-sm font-bold bg-indigo-50 text-indigo-600 border border-indigo-200">
+                  {evaluation.attire_type}
+                </span>
+              )}
+            </div>
           </div>
 
           <div className="bg-white rounded-2xl shadow-sm border border-slate-200 p-6 space-y-5 shrink-0">

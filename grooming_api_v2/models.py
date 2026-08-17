@@ -63,6 +63,7 @@ class EvaluationSchema(BaseModel):
     photo_evidence_url: str
     overall_status: OverallStatusEnum
     ai_summary: str
+    attire_type: Optional[str] = None
     general_idcard_check: dict = Field(default_factory=dict)
     grooming_check: dict = Field(default_factory=dict)
     attire_check: dict = Field(default_factory=dict)

@@ -75,5 +75,5 @@ If a detail is completely occluded or the image resolution is too low to definit
 1. Evaluate EVERY relevant checkpoint (General + Gender Specific) listed above against the LAST image (the instructor).
 2. For the output, you will NO LONGER provide individual PASS/FAIL statuses. Instead, provide a simple JSON map (dictionary) for each category (`general_idcard_check`, `grooming_check`, `attire_check`, `accessories_check`, `footwear_check`).
 3. In these maps, the Key must be the specific rule/checkpoint (e.g., "Hair", "ID Card", "Shoes"), and the Value must be your exact physical observation (e.g., "Neatly combed and tied back", "Blue lanyard visible", "Black formal leather shoes").
-4. Finally, provide the `overall_status` (COMPLIANT if all rules are met, NON_COMPLIANT if any rule is broken) and a brief 2-3 sentence `ai_summary` of your findings.
+4. Finally, provide the `overall_status` (COMPLIANT if all rules are met, NON_COMPLIANT if any rule is broken), a brief 2-3 sentence `ai_summary` of your findings, and the `attire_type` (a string describing the primary attire worn, e.g., "Formal Attire", "Saree", "Kurta", "T-Shirt", "Unknown").
 """
