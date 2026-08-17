@@ -1,9 +1,17 @@
 import React, { useState, useEffect } from 'react';
 import { History, Search, MapPin, CheckCircle2, XCircle, Clock, Download, X } from 'lucide-react';
 import * as XLSX from 'xlsx';
+import useSWR from 'swr';
 
 const API_BASE = import.meta.env.VITE_API_BASE || `http://${window.location.hostname}:8000`;
 const locationCache = {};
+
+const fetcher = async (url) => {
+  const token = localStorage.getItem('nxtwave_token');
+  const res = await fetch(url, { headers: { 'Authorization': `Bearer ${token}` } });
+  if (!res.ok) throw new Error('Failed to fetch');
+  return res.json();
+};
 
 function LocationName({ coords, onResolved }) {
   const [name, setName] = useState('Loading...');
@@ -49,15 +57,21 @@ function LocationName({ coords, onResolved }) {
 }
 
 export default function DailyAttendanceTable({ onRowClick }) {
-  const [records, setRecords] = useState([]);
-  const [allColleges, setAllColleges] = useState([]);
-  const [loading, setLoading] = useState(true);
   const [search, setSearch] = useState('');
   
   const [dateFilter, setDateFilter] = useState('');
   const [roleFilter, setRoleFilter] = useState('');
   const [collegeFilter, setCollegeFilter] = useState('');
   const [resolvedLocations, setResolvedLocations] = useState({});
+
+  const { data: records = [], isLoading: loading } = useSWR(
+    `${API_BASE}/api/v2/attendance/today${dateFilter ? `?date=${dateFilter}` : ''}`, 
+    fetcher,
+    { refreshInterval: 30000 }
+  );
+  
+  const { data: allCollegesData = [] } = useSWR(`${API_BASE}/api/v2/colleges`, fetcher);
+  const allColleges = allCollegesData.map(c => c.name);
 
   const [showExport, setShowExport] = useState(false);
   const [exportFrom, setExportFrom] = useState('');
@@ -119,50 +133,7 @@ export default function DailyAttendanceTable({ onRowClick }) {
     }
   };
 
-  const fetchRecords = async () => {
-    setLoading(true);
-    try {
-      const token = localStorage.getItem('nxtwave_token');
-      const url = `${API_BASE}/api/v2/attendance/today${dateFilter ? `?date=${dateFilter}` : ''}`;
-      const res = await fetch(url, {
-        headers: { 'Authorization': `Bearer ${token}` }
-      });
-      if (res.ok) {
-        const data = await res.json();
-        setRecords(data);
-      }
-    } catch (err) {
-      console.error("Failed to fetch daily records", err);
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  useEffect(() => {
-    const fetchColleges = async () => {
-      try {
-        const token = localStorage.getItem('nxtwave_token');
-        const res = await fetch(`${API_BASE}/api/v2/colleges`, {
-          headers: { 'Authorization': `Bearer ${token}` }
-        });
-        if (res.ok) {
-          const data = await res.json();
-          setAllColleges(data.map(c => c.name));
-        }
-      } catch (err) {
-        console.error("Failed to fetch colleges", err);
-      }
-    };
-    fetchColleges();
-  }, []);
-
-  useEffect(() => {
-    fetchRecords();
-    // Poll every 30 seconds for AI status updates
-    const interval = setInterval(fetchRecords, 30000);
-    return () => clearInterval(interval);
-  }, [dateFilter]);
-
+  // useSWR handles data fetching and polling automatically
   const uniqueRoles = [...new Set(records.map(r => r.instructor_role).filter(Boolean))];
   const uniqueColleges = allColleges.length > 0 
     ? allColleges 
