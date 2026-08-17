@@ -1,10 +1,11 @@
 import React, { useState, useEffect } from 'react';
-import { Plus, Users, Search, Edit2, Trash2 } from 'lucide-react';
+import { Plus, Users, Search, Edit2, Trash2, Building2, Mail, Phone } from 'lucide-react';
 
 const API_BASE = import.meta.env.VITE_API_BASE || `http://${window.location.hostname}:8000`;
 
 export default function BOAManagement() {
   const [boas, setBoas] = useState([]);
+  const [colleges, setColleges] = useState([]);
   const [loading, setLoading] = useState(true);
   const [showModal, setShowModal] = useState(false);
   const [isEditMode, setIsEditMode] = useState(false);
@@ -14,6 +15,7 @@ export default function BOAManagement() {
     name: '',
     employee_id: '',
     email: '',
+    phone_no: '',
     password: '',
     college_id: ''
   });
@@ -36,9 +38,30 @@ export default function BOAManagement() {
     }
   };
 
+  const fetchColleges = async () => {
+    try {
+      const token = localStorage.getItem('nxtwave_token');
+      const res = await fetch(`${API_BASE}/api/v2/colleges`, {
+        headers: { 'Authorization': `Bearer ${token}` }
+      });
+      if (res.ok) {
+        const data = await res.json();
+        setColleges(data);
+      }
+    } catch (err) {
+      console.error("Failed to fetch colleges", err);
+    }
+  };
+
   useEffect(() => {
     fetchBOAs();
+    fetchColleges();
   }, []);
+
+  const getCollegeName = (collegeId) => {
+    const col = colleges.find(c => c._id === collegeId);
+    return col ? col.name : collegeId;
+  };
 
   const handleCreateOrUpdate = async (e) => {
     e.preventDefault();
@@ -92,7 +115,7 @@ export default function BOAManagement() {
   const openAddModal = () => {
     setIsEditMode(false);
     setEditingId(null);
-    setFormData({ name: '', employee_id: '', email: '', password: '', college_id: '' });
+    setFormData({ name: '', employee_id: '', email: '', phone_no: '', password: '', college_id: '' });
     setShowModal(true);
   };
 
@@ -103,6 +126,7 @@ export default function BOAManagement() {
       name: boa.name,
       employee_id: boa.employee_id,
       email: boa.email || '',
+      phone_no: boa.phone_no || '',
       password: '',
       college_id: boa.college_id || ''
     });
@@ -139,10 +163,10 @@ export default function BOAManagement() {
           <table className="w-full text-left border-collapse">
             <thead>
               <tr className="bg-slate-50 border-b border-slate-200 text-xs font-bold text-slate-500 uppercase tracking-wider">
-                <th className="p-4">Name</th>
                 <th className="p-4">Employee ID</th>
-                <th className="p-4">College ID</th>
-                <th className="p-4">Registered Date</th>
+                <th className="p-4">BOA Name</th>
+                <th className="p-4">College Name</th>
+                <th className="p-4">Contact</th>
                 <th className="p-4 text-right">Actions</th>
               </tr>
             </thead>
@@ -158,11 +182,17 @@ export default function BOAManagement() {
               ) : (
                 boas.map(boa => (
                   <tr key={boa._id} className="hover:bg-slate-50 transition-colors group">
+                    <td className="p-4 text-xs font-mono font-medium text-slate-500">{boa.employee_id}</td>
                     <td className="p-4 font-bold text-slate-800">{boa.name}</td>
-                    <td className="p-4 text-sm font-medium text-slate-600">{boa.employee_id}</td>
-                    <td className="p-4 text-sm font-medium text-slate-600">{boa.college_id}</td>
-                    <td className="p-4 text-sm text-slate-500">
-                      {new Date(boa.created_at).toLocaleDateString()}
+                    <td className="p-4 text-sm font-semibold text-slate-700 flex items-center gap-1.5 pt-5">
+                      <Building2 size={14} className="text-slate-400" />
+                      {getCollegeName(boa.college_id)}
+                    </td>
+                    <td className="p-4">
+                      <div className="flex flex-col gap-1.5">
+                        {boa.email ? <span className="text-xs font-medium text-slate-500 flex items-center gap-1.5"><Mail size={12} className="text-slate-400"/> {boa.email}</span> : <span className="text-xs text-slate-300">-</span>}
+                        {boa.phone_no ? <span className="text-xs font-medium text-slate-500 flex items-center gap-1.5"><Phone size={12} className="text-slate-400"/> {boa.phone_no}</span> : null}
+                      </div>
                     </td>
                     <td className="p-4 text-right">
                       <div className="flex items-center justify-end gap-2 opacity-0 group-hover:opacity-100 transition-opacity">
@@ -203,17 +233,38 @@ export default function BOAManagement() {
                 <label className="block text-xs font-bold text-slate-500 uppercase mb-1">Employee ID</label>
                 <input required className="w-full rounded-xl border border-slate-200 p-3 text-sm focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 outline-none" value={formData.employee_id} onChange={e => setFormData({...formData, employee_id: e.target.value})} />
               </div>
-              <div>
-                <label className="block text-xs font-bold text-slate-500 uppercase mb-1">Email</label>
-                <input required type="email" className="w-full rounded-xl border border-slate-200 p-3 text-sm focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 outline-none" value={formData.email} onChange={e => setFormData({...formData, email: e.target.value})} />
+              <div className="grid grid-cols-2 gap-4">
+                <div>
+                  <label className="block text-xs font-bold text-slate-500 uppercase mb-1">Email</label>
+                  <input required type="email" className="w-full rounded-xl border border-slate-200 p-3 text-sm focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 outline-none" value={formData.email} onChange={e => setFormData({...formData, email: e.target.value})} />
+                </div>
+                <div>
+                  <label className="block text-xs font-bold text-slate-500 uppercase mb-1">Phone (Optional)</label>
+                  <input type="tel" className="w-full rounded-xl border border-slate-200 p-3 text-sm focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 outline-none" value={formData.phone_no} onChange={e => setFormData({...formData, phone_no: e.target.value})} />
+                </div>
               </div>
               <div>
                 <label className="block text-xs font-bold text-slate-500 uppercase mb-1">Password {isEditMode && <span className="text-slate-400 font-normal normal-case">(leave blank to keep current)</span>}</label>
                 <input required={!isEditMode} type="password" placeholder={isEditMode ? "********" : ""} className="w-full rounded-xl border border-slate-200 p-3 text-sm focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 outline-none" value={formData.password} onChange={e => setFormData({...formData, password: e.target.value})} />
               </div>
               <div>
-                <label className="block text-xs font-bold text-slate-500 uppercase mb-1">College ID</label>
-                <input required className="w-full rounded-xl border border-slate-200 p-3 text-sm focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 outline-none" value={formData.college_id} onChange={e => setFormData({...formData, college_id: e.target.value})} />
+                <label className="block text-xs font-bold text-slate-500 uppercase mb-1">College</label>
+                <div className="relative">
+                  <select 
+                    required 
+                    className="w-full rounded-xl border border-slate-200 p-3 text-sm focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 outline-none appearance-none bg-white"
+                    value={formData.college_id} 
+                    onChange={e => setFormData({...formData, college_id: e.target.value})}
+                  >
+                    <option value="">-- Select College --</option>
+                    {colleges.map(c => (
+                      <option key={c._id} value={c._id}>{c.name}</option>
+                    ))}
+                  </select>
+                  <div className="absolute inset-y-0 right-3 flex items-center pointer-events-none text-slate-400">
+                    <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M19 9l-7 7-7-7"></path></svg>
+                  </div>
+                </div>
               </div>
 
               <div className="pt-4 flex gap-3">

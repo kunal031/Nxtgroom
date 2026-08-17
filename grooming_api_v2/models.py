@@ -1,5 +1,5 @@
 from pydantic import BaseModel, Field, EmailStr
-from typing import Optional, Dict, Literal
+from typing import Optional, Dict, Literal, List
 from datetime import datetime
 from enum import Enum
 import uuid
@@ -43,6 +43,7 @@ class BOASchema(BaseModel):
     employee_id: str
     name: str
     college_id: str  # Ref: College._id
+    phone_no: Optional[str] = None
     created_at: datetime = Field(default_factory=datetime.utcnow)
 
 class AttendanceSchema(BaseModel):
@@ -85,6 +86,7 @@ class BOACreate(BaseModel):
     email: EmailStr
     password: str
     college_id: str
+    phone_no: Optional[str] = None
 
 class BOAUpdate(BaseModel):
     employee_id: str
@@ -92,6 +94,7 @@ class BOAUpdate(BaseModel):
     email: EmailStr
     password: Optional[str] = None
     college_id: str
+    phone_no: Optional[str] = None
 
 class InstructorCreate(BaseModel):
     employee_id: str
@@ -101,6 +104,20 @@ class InstructorCreate(BaseModel):
     college_id: str
     email: Optional[EmailStr] = None
     phone_no: Optional[str] = None
+
+class OTPRequest(BaseModel):
+    email: EmailStr
+
+class OTPVerifyReset(BaseModel):
+    email: EmailStr
+    otp: str
+    new_password: str
+
+class ExportRequest(BaseModel):
+    date_from: Optional[str] = None
+    date_to: Optional[str] = None
+    colleges: Optional[List[str]] = None
+    send_to_email: Optional[EmailStr] = None
 
 class AttendanceCheckOutReq(BaseModel):
     instructor_id: str

@@ -10,6 +10,7 @@ export default function EvaluateCard({ instructors, fetchInstructors }) {
   const [loading, setLoading] = useState(false);
   const [checkoutLoading, setCheckoutLoading] = useState(false);
   const [locationStatus, setLocationStatus] = useState('');
+  const [hasCheckedInToday, setHasCheckedInToday] = useState(false);
 
   const handleFileChange = (e) => {
     const selected = e.target.files[0];
@@ -18,6 +19,29 @@ export default function EvaluateCard({ instructors, fetchInstructors }) {
       setPreview(URL.createObjectURL(selected));
     }
   };
+
+  React.useEffect(() => {
+    const checkStatus = async () => {
+      if (!selectedUuid) {
+        setHasCheckedInToday(false);
+        return;
+      }
+      try {
+        const token = localStorage.getItem('nxtwave_token');
+        const res = await fetch(`${API_BASE}/api/v2/attendance/today`, {
+          headers: { 'Authorization': `Bearer ${token}` }
+        });
+        if (res.ok) {
+          const data = await res.json();
+          const exists = data.some(att => att.instructor_id === selectedUuid);
+          setHasCheckedInToday(exists);
+        }
+      } catch (e) {
+        console.error(e);
+      }
+    };
+    checkStatus();
+  }, [selectedUuid]);
 
   const getCoordinates = () => {
     return new Promise((resolve) => {
@@ -37,6 +61,12 @@ export default function EvaluateCard({ instructors, fetchInstructors }) {
     if (!selectedUuid || !file) {
       alert("Please select an instructor and upload an image.");
       return;
+    }
+
+    if (hasCheckedInToday) {
+      if (!window.confirm("This instructor has already been evaluated today. Submitting again will overwrite the previous evaluation. Continue?")) {
+        return;
+      }
     }
 
     setLoading(true);
@@ -138,6 +168,11 @@ export default function EvaluateCard({ instructors, fetchInstructors }) {
               <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M19 9l-7 7-7-7"></path></svg>
             </div>
           </div>
+          {hasCheckedInToday && (
+            <p className="mt-2 text-xs font-bold text-amber-600 bg-amber-50 p-2 rounded-lg border border-amber-100">
+              ⚠️ This instructor has already checked in today. Submitting again will overwrite the previous evaluation.
+            </p>
+          )}
         </div>
 
         <div className="flex-1 flex flex-col mb-6">

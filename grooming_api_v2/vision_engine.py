@@ -16,6 +16,7 @@ class CheckItem(BaseModel):
 
 class GroomingReport(BaseModel):
     overall_status: Literal["COMPLIANT", "NON_COMPLIANT"] = Field(description="COMPLIANT if all applicable checks pass. NON_COMPLIANT if any check fails.")
+    average_performance_tag: Literal["Poor", "Average", "Good", "Excellent"] = Field(description="A tag evaluating the average performance of the instructor's grooming.")
     ai_summary: str = Field(description="A short 2-3 sentence summary of the evaluation.")
     general_idcard_check: list[CheckItem] = Field(description="List of ID Card checks.")
     grooming_check: list[CheckItem] = Field(description="List of grooming checks.")
@@ -69,7 +70,7 @@ def evaluate_image(instructor_image_path: str, gender: Optional[str] = None) -> 
             "image_url": {"url": f"data:image/jpeg;base64,{b64_instructor}"}
         })
 
-        ai_model = os.environ.get("OPENAI_MODEL", "gpt-4o")
+        ai_model = os.environ.get("OPENAI_MODEL", "gpt-5.6-sol")
 
         response = client.beta.chat.completions.parse(
             model=ai_model,

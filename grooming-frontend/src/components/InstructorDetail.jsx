@@ -21,7 +21,17 @@ function LocationName({ coords }) {
     fetch(`https://nominatim.openstreetmap.org/reverse?format=json&lat=${lat}&lon=${lon}`)
       .then(r => r.json())
       .then(data => {
-        const locName = data.address?.city || data.address?.town || data.address?.suburb || data.display_name?.split(',')[0] || coords;
+        const parts = [];
+        if (data.address?.suburb) parts.push(data.address.suburb);
+        else if (data.address?.neighbourhood) parts.push(data.address.neighbourhood);
+        
+        if (data.address?.city) parts.push(data.address.city);
+        else if (data.address?.town) parts.push(data.address.town);
+        else if (data.address?.state_district) parts.push(data.address.state_district);
+        
+        let locName = parts.length > 0 ? parts.join(', ') : (data.display_name?.split(',').slice(1,3).join(',').trim() || coords);
+        if (locName.includes('undefined')) locName = coords;
+        
         locationCache[coords] = locName;
         setName(locName);
       })

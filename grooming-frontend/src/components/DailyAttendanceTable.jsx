@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
-import { History, Search, MapPin, CheckCircle2, XCircle, Clock } from 'lucide-react';
+import { History, Search, MapPin, CheckCircle2, XCircle, Clock, Download, X } from 'lucide-react';
+import * as XLSX from 'xlsx';
 
 const API_BASE = import.meta.env.VITE_API_BASE || `http://${window.location.hostname}:8000`;
 const locationCache = {};
@@ -23,7 +24,17 @@ function LocationName({ coords, onResolved }) {
     fetch(`https://nominatim.openstreetmap.org/reverse?format=json&lat=${lat}&lon=${lon}`)
       .then(r => r.json())
       .then(data => {
-        const locName = data.address?.city || data.address?.town || data.address?.suburb || data.display_name?.split(',')[0] || coords;
+        const parts = [];
+        if (data.address?.suburb) parts.push(data.address.suburb);
+        else if (data.address?.neighbourhood) parts.push(data.address.neighbourhood);
+        
+        if (data.address?.city) parts.push(data.address.city);
+        else if (data.address?.town) parts.push(data.address.town);
+        else if (data.address?.state_district) parts.push(data.address.state_district);
+        
+        let locName = parts.length > 0 ? parts.join(', ') : (data.display_name?.split(',').slice(1,3).join(',').trim() || coords);
+        if (locName.includes('undefined')) locName = coords;
+        
         locationCache[coords] = locName;
         setName(locName);
         if (onResolved) onResolved(locName);
@@ -39,6 +50,7 @@ function LocationName({ coords, onResolved }) {
 
 export default function DailyAttendanceTable({ onRowClick }) {
   const [records, setRecords] = useState([]);
+  const [allColleges, setAllColleges] = useState([]);
   const [loading, setLoading] = useState(true);
   const [search, setSearch] = useState('');
   
@@ -46,6 +58,66 @@ export default function DailyAttendanceTable({ onRowClick }) {
   const [roleFilter, setRoleFilter] = useState('');
   const [collegeFilter, setCollegeFilter] = useState('');
   const [resolvedLocations, setResolvedLocations] = useState({});
+
+  const [showExport, setShowExport] = useState(false);
+  const [exportFrom, setExportFrom] = useState('');
+  const [exportTo, setExportTo] = useState('');
+  const [exportColleges, setExportColleges] = useState([]);
+  const [exportEmail, setExportEmail] = useState('');
+  const [exportFormat, setExportFormat] = useState('csv'); // 'csv' or 'excel'
+  const [exportLoading, setExportLoading] = useState(false);
+
+  const handleExport = async (e) => {
+    e.preventDefault();
+    setExportLoading(true);
+    try {
+      const token = localStorage.getItem('nxtwave_token');
+      const payload = {};
+      if (exportFrom && exportTo) {
+        payload.date_from = exportFrom;
+        payload.date_to = exportTo;
+      }
+      if (exportColleges.length > 0) payload.colleges = exportColleges;
+      if (exportEmail) payload.send_to_email = exportEmail;
+
+      const res = await fetch(`${API_BASE}/api/v2/attendance/export`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${token}`
+        },
+        body: JSON.stringify(payload)
+      });
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.detail || "Export failed");
+
+      if (exportEmail) {
+        alert(data.message);
+      } else if (data.csv) {
+        if (exportFormat === 'csv') {
+          // Create CSV download
+          const blob = new Blob([data.csv], { type: 'text/csv;charset=utf-8;' });
+          const link = document.createElement('a');
+          const url = URL.createObjectURL(blob);
+          link.setAttribute('href', url);
+          link.setAttribute('download', `Daily_Records_${exportFrom || 'all'}_to_${exportTo || 'all'}.csv`);
+          link.style.visibility = 'hidden';
+          document.body.appendChild(link);
+          link.click();
+          document.body.removeChild(link);
+        } else {
+          // Create Excel download
+          const workbook = XLSX.read(data.csv, { type: 'string' });
+          XLSX.writeFile(workbook, `Daily_Records_${exportFrom || 'all'}_to_${exportTo || 'all'}.xlsx`);
+        }
+      }
+      setShowExport(false);
+    } catch (err) {
+      alert("Error exporting: " + err.message);
+    } finally {
+      setExportLoading(false);
+    }
+  };
 
   const fetchRecords = async () => {
     setLoading(true);
@@ -67,6 +139,24 @@ export default function DailyAttendanceTable({ onRowClick }) {
   };
 
   useEffect(() => {
+    const fetchColleges = async () => {
+      try {
+        const token = localStorage.getItem('nxtwave_token');
+        const res = await fetch(`${API_BASE}/api/v2/colleges`, {
+          headers: { 'Authorization': `Bearer ${token}` }
+        });
+        if (res.ok) {
+          const data = await res.json();
+          setAllColleges(data.map(c => c.name));
+        }
+      } catch (err) {
+        console.error("Failed to fetch colleges", err);
+      }
+    };
+    fetchColleges();
+  }, []);
+
+  useEffect(() => {
     fetchRecords();
     // Poll every 30 seconds for AI status updates
     const interval = setInterval(fetchRecords, 30000);
@@ -74,7 +164,9 @@ export default function DailyAttendanceTable({ onRowClick }) {
   }, [dateFilter]);
 
   const uniqueRoles = [...new Set(records.map(r => r.instructor_role).filter(Boolean))];
-  const uniqueColleges = [...new Set(records.map(r => r.college_name).filter(Boolean))];
+  const uniqueColleges = allColleges.length > 0 
+    ? allColleges 
+    : [...new Set(records.map(r => r.college_name).filter(Boolean))];
 
   const filteredRecords = records.filter(r => {
     const locName = resolvedLocations[r._id] || r.location_coordinates || '';
@@ -159,6 +251,12 @@ export default function DailyAttendanceTable({ onRowClick }) {
               onChange={(e) => setSearch(e.target.value)}
             />
           </div>
+          <button
+            onClick={() => setShowExport(true)}
+            className="flex items-center gap-2 bg-indigo-50 text-indigo-600 px-4 py-2 rounded-xl text-sm font-bold hover:bg-indigo-100 transition-colors border border-indigo-200"
+          >
+            <Download size={16} /> Export
+          </button>
         </div>
       </div>
 
@@ -214,6 +312,97 @@ export default function DailyAttendanceTable({ onRowClick }) {
           </table>
         </div>
       </div>
+
+      {showExport && (
+        <div className="fixed inset-0 bg-black/50 backdrop-blur-sm z-50 flex items-center justify-center p-4">
+          <div className="bg-white rounded-3xl shadow-xl w-full max-w-lg overflow-hidden">
+            <div className="flex items-center justify-between p-6 border-b border-slate-100">
+              <h3 className="text-lg font-extrabold text-slate-800 flex items-center gap-2">
+                <Download size={20} className="text-indigo-600" /> Export Records
+              </h3>
+              <button onClick={() => setShowExport(false)} className="text-slate-400 hover:text-slate-600 bg-slate-50 hover:bg-slate-100 rounded-full p-2">
+                <X size={20} />
+              </button>
+            </div>
+            <form onSubmit={handleExport} className="p-6 space-y-5">
+              <div className="grid grid-cols-2 gap-4">
+                <div>
+                  <label className="block text-xs font-bold text-slate-500 uppercase mb-2">From Date</label>
+                  <input type="date" value={exportFrom} onChange={e => setExportFrom(e.target.value)} className="w-full rounded-xl border border-slate-200 p-3 bg-slate-50 focus:bg-white focus:ring-2 focus:ring-indigo-500 outline-none text-sm" />
+                </div>
+                <div>
+                  <label className="block text-xs font-bold text-slate-500 uppercase mb-2">To Date</label>
+                  <input type="date" value={exportTo} onChange={e => setExportTo(e.target.value)} className="w-full rounded-xl border border-slate-200 p-3 bg-slate-50 focus:bg-white focus:ring-2 focus:ring-indigo-500 outline-none text-sm" />
+                </div>
+              </div>
+
+              <div>
+                <label className="block text-xs font-bold text-slate-500 uppercase mb-2">Colleges (Leave empty for all)</label>
+                <div className="max-h-40 overflow-y-auto rounded-xl border border-slate-200 bg-slate-50 p-2 space-y-1">
+                  {allColleges.map(c => (
+                    <label key={c} className="flex items-center gap-2 p-2 hover:bg-slate-100 rounded-lg cursor-pointer">
+                      <input 
+                        type="checkbox" 
+                        className="rounded text-indigo-600 focus:ring-indigo-500"
+                        checked={exportColleges.includes(c)}
+                        onChange={(e) => {
+                          if (e.target.checked) setExportColleges([...exportColleges, c]);
+                          else setExportColleges(exportColleges.filter(col => col !== c));
+                        }}
+                      />
+                      <span className="text-sm font-medium text-slate-700">{c}</span>
+                    </label>
+                  ))}
+                </div>
+              </div>
+
+              <div>
+                <label className="block text-xs font-bold text-slate-500 uppercase mb-2">Send To Email (Optional)</label>
+                <input type="email" placeholder="example@nxtwave.tech" value={exportEmail} onChange={e => setExportEmail(e.target.value)} className="w-full rounded-xl border border-slate-200 p-3 bg-slate-50 focus:bg-white focus:ring-2 focus:ring-indigo-500 outline-none text-sm" />
+                <p className="text-xs text-slate-400 mt-1">If provided, the export will be emailed as a CSV attachment instead of downloaded.</p>
+              </div>
+
+              {!exportEmail && (
+                <div>
+                  <label className="block text-xs font-bold text-slate-500 uppercase mb-2">Export Format</label>
+                  <div className="flex gap-4">
+                    <label className="flex items-center gap-2 cursor-pointer text-sm font-medium text-slate-700">
+                      <input 
+                        type="radio" 
+                        name="exportFormat" 
+                        value="csv" 
+                        checked={exportFormat === 'csv'} 
+                        onChange={() => setExportFormat('csv')} 
+                        className="text-indigo-600 focus:ring-indigo-500"
+                      />
+                      CSV Document
+                    </label>
+                    <label className="flex items-center gap-2 cursor-pointer text-sm font-medium text-slate-700">
+                      <input 
+                        type="radio" 
+                        name="exportFormat" 
+                        value="excel" 
+                        checked={exportFormat === 'excel'} 
+                        onChange={() => setExportFormat('excel')} 
+                        className="text-indigo-600 focus:ring-indigo-500"
+                      />
+                      Excel Sheet (.xlsx)
+                    </label>
+                  </div>
+                </div>
+              )}
+
+              <div className="pt-4 flex gap-3">
+                <button type="button" onClick={() => setShowExport(false)} className="flex-1 py-3 bg-slate-100 text-slate-600 font-bold rounded-xl text-sm">Cancel</button>
+                <button type="submit" disabled={exportLoading} className="flex-1 py-3 bg-indigo-600 text-white font-bold rounded-xl text-sm flex items-center justify-center gap-2 hover:bg-indigo-700 transition-colors disabled:opacity-70">
+                  {exportLoading ? 'Processing...' : <><Download size={18} /> Download / Send</>}
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
+
     </div>
   );
 }
