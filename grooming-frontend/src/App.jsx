@@ -98,26 +98,16 @@ export default function App() {
         setIsSidebarOpen={setIsSidebarOpen} 
         activeTab={activeTab} 
         navigate={navigate} 
+        onLogout={handleLogout}
       />
 
       <main className="flex-1 h-full overflow-auto p-4 md:p-6 flex flex-col w-full">
-        <div className="flex items-center justify-between gap-4 mb-6 shrink-0">
-          <div className="flex items-center gap-4">
-            <button 
-              className="lg:hidden text-slate-600 hover:text-slate-900 bg-white p-2 rounded-lg border border-slate-200 shadow-sm"
-              onClick={() => setIsSidebarOpen(true)}
-            >
-              <Menu size={20} />
-            </button>
-            <h1 className="text-2xl md:text-3xl lg:text-4xl font-extrabold text-[#1a1f36] tracking-tight">
-              Instructor Grooming Standard
-            </h1>
-          </div>
+        <div className="flex items-center justify-between gap-4 mb-6 shrink-0 lg:hidden">
           <button 
-            onClick={handleLogout}
-            className="px-4 py-2 text-sm font-bold text-slate-500 bg-white border border-slate-200 rounded-lg shadow-sm hover:bg-slate-50 transition-colors"
+            className="text-slate-600 hover:text-slate-900 bg-white p-2 rounded-lg border border-slate-200 shadow-sm"
+            onClick={() => setIsSidebarOpen(true)}
           >
-            Logout
+            <Menu size={20} />
           </button>
         </div>
         

@@ -70,19 +70,35 @@ def evaluate_image(instructor_image_path: str, gender: Optional[str] = None) -> 
             "image_url": {"url": f"data:image/jpeg;base64,{b64_instructor}"}
         })
 
+        import json
+        
+        # Determine the model to use. Defaulting to a safe model if the experimental one isn't available
         ai_model = os.environ.get("OPENAI_MODEL", "gpt-5.6-sol")
 
-        response = client.beta.chat.completions.parse(
-            model=ai_model,
-            messages=[
-                {"role": "system", "content": SYSTEM_PROMPT},
-                {"role": "user", "content": content_array}
-            ],
-            response_format=GroomingReport,
-            temperature=1, 
-        )
+        try:
+            response = client.chat.completions.create(
+                model=ai_model,
+                messages=[
+                    {"role": "system", "content": SYSTEM_PROMPT},
+                    {"role": "user", "content": content_array}
+                ],
+                response_format={"type": "json_object"},
+                temperature=1, 
+            )
+        except Exception as api_err:
+            print(f"Failed with primary model {ai_model}, trying fallback gpt-4o-mini. Error: {api_err}")
+            response = client.chat.completions.create(
+                model="gpt-4o-mini",
+                messages=[
+                    {"role": "system", "content": SYSTEM_PROMPT},
+                    {"role": "user", "content": content_array}
+                ],
+                response_format={"type": "json_object"},
+                temperature=1, 
+            )
         
-        return response.choices[0].message.parsed.model_dump()
+        parsed = json.loads(response.choices[0].message.content)
+        return parsed
 
     except Exception as e:
         return {"error": str(e)}

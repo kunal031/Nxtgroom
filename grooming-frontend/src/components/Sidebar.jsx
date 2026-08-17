@@ -1,8 +1,9 @@
 import React, { useState, useEffect } from 'react';
-import { LayoutGrid, Users, ShieldCheck, X, History, Building2, UserCog, Folder, ChevronDown, ChevronRight } from 'lucide-react';
+import { LayoutGrid, Users, ShieldCheck, X, History, Building2, UserCog, Folder, ChevronDown, ChevronRight, MoreVertical, LogOut } from 'lucide-react';
 
-export default function Sidebar({ isSidebarOpen, setIsSidebarOpen, activeTab, navigate }) {
+export default function Sidebar({ isSidebarOpen, setIsSidebarOpen, activeTab, navigate, onLogout }) {
   const [isManagementOpen, setIsManagementOpen] = useState(false);
+  const [isProfileMenuOpen, setIsProfileMenuOpen] = useState(false);
   
   useEffect(() => {
     if (['college-management', 'instructor-management', 'boa-management'].includes(activeTab)) {
@@ -106,8 +107,11 @@ export default function Sidebar({ isSidebarOpen, setIsSidebarOpen, activeTab, na
       </nav>
 
       {/* User Profile Badge */}
-      <div className="p-4 border-t border-white/10 shrink-0">
-        <div className="flex items-center gap-3 bg-white/10 rounded-xl p-3 hover:bg-white/20 transition-colors cursor-pointer group">
+      <div className="p-4 border-t border-white/10 shrink-0 relative">
+        <div 
+          className="flex items-center gap-3 bg-white/10 rounded-xl p-3 hover:bg-white/20 transition-colors cursor-pointer group"
+          onClick={() => setIsProfileMenuOpen(!isProfileMenuOpen)}
+        >
           <div className="w-10 h-10 rounded-full bg-white text-indigo-600 flex items-center justify-center shrink-0 overflow-hidden shadow-sm">
             <span className="font-bold text-lg">{localStorage.getItem('nxtwave_name')?.charAt(0) || 'U'}</span>
           </div>
@@ -115,7 +119,23 @@ export default function Sidebar({ isSidebarOpen, setIsSidebarOpen, activeTab, na
             <h3 className="text-sm font-bold text-white truncate">{localStorage.getItem('nxtwave_name') || 'Admin'}</h3>
             <p className="text-xs text-indigo-200 truncate">{localStorage.getItem('nxtwave_email') || 'admin@nxtwave.com'}</p>
           </div>
+          <MoreVertical size={18} className="text-white/70 group-hover:text-white" />
         </div>
+        
+        {isProfileMenuOpen && (
+          <div className="absolute bottom-full left-4 right-4 mb-2 bg-white rounded-xl shadow-lg border border-slate-200 overflow-hidden z-50">
+            <button 
+              onClick={() => {
+                setIsProfileMenuOpen(false);
+                if (onLogout) onLogout();
+              }}
+              className="w-full flex items-center gap-3 px-4 py-3 text-sm font-bold text-rose-600 hover:bg-rose-50 transition-colors"
+            >
+              <LogOut size={16} />
+              Logout
+            </button>
+          </div>
+        )}
       </div>
     </aside>
   );

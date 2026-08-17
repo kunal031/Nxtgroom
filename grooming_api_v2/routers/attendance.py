@@ -1,4 +1,5 @@
 from fastapi import APIRouter, Depends, HTTPException, Form, File, UploadFile, BackgroundTasks
+import asyncio
 import os
 import shutil
 from datetime import datetime, timedelta
@@ -21,7 +22,8 @@ os.makedirs(UPLOAD_DIR, exist_ok=True)
 async def process_ai_evaluation(attendance_id: str, filepath: str, gender: str, instructor_name: str, instructor_email: str, admin_email: str):
     db = get_db()
     try:
-        report = evaluate_image(filepath, gender)
+        loop = asyncio.get_running_loop()
+        report = await loop.run_in_executor(None, evaluate_image, filepath, gender)
         
         if "error" in report:
             print(f"AI Eval Error: {report['error']}")
@@ -31,17 +33,21 @@ async def process_ai_evaluation(attendance_id: str, filepath: str, gender: str, 
             )
             return
             
+        overall_status_val = str(report.get("overall_status", "COMPLIANT")).upper()
+        if overall_status_val not in ["COMPLIANT", "NON_COMPLIANT"]:
+            overall_status_val = "NON_COMPLIANT"
+            
         tag = report.get("average_performance_tag", "Average")
         eval_doc = EvaluationSchema(
             attendance_id=attendance_id,
             photo_evidence_url=filepath,
-            overall_status=report.get("overall_status"),
+            overall_status=overall_status_val,
             ai_summary=report.get("ai_summary", ""),
-            general_idcard_check=report.get("general_idcard_check", []),
-            grooming_check=report.get("grooming_check", []),
-            attire_check=report.get("attire_check", []),
-            accessories_check=report.get("accessories_check", []),
-            footwear_check=report.get("footwear_check", [])
+            general_idcard_check=report.get("general_idcard_check", {}),
+            grooming_check=report.get("grooming_check", {}),
+            attire_check=report.get("attire_check", {}),
+            accessories_check=report.get("accessories_check", {}),
+            footwear_check=report.get("footwear_check", {})
         )
         
         await db.evaluations.insert_one(eval_doc.dict(by_alias=True))
@@ -60,8 +66,11 @@ async def process_ai_evaluation(attendance_id: str, filepath: str, gender: str, 
             send_evaluation_email(instructor_email, instructor_name, status_val, report.get("ai_summary", ""))
 
     except Exception as e:
+        import traceback
         print(f"Background task failed: {e}")
-        await db.attendance.update_one({"_id": attendance_id}, {"$set": {"status": "failed", "remarks": "AI processing error"}})
+        traceback.print_exc()
+        error_msg = f"AI error: {str(e)}"[:150] # Truncate just in case it's too long
+        await db.attendance.update_one({"_id": attendance_id}, {"$set": {"status": "failed", "remarks": error_msg}})
 
 @router.post("/check-in")
 async def check_in(
@@ -81,12 +90,6 @@ async def check_in(
     boa_id = boa_user.get("reference_id") if boa_user and boa_user.get("reference_id") else "super-admin"
 
     now = datetime.now()
-    today_start = now.replace(hour=0, minute=0, second=0, microsecond=0)
-    existing_att = await db.attendance.find_one({
-        "instructor_id": instructor_id,
-        "check_in_time": {"$gte": today_start}
-    })
-
     attendance = AttendanceSchema(
         instructor_id=instructor_id,
         boa_id=boa_id,
@@ -97,11 +100,7 @@ async def check_in(
         remarks="AI Analysis in progress..."
     )
     
-    if existing_att:
-        attendance.id = existing_att["_id"]
-        await db.attendance.update_one({"_id": attendance.id}, {"$set": attendance.dict(by_alias=True)})
-    else:
-        await db.attendance.insert_one(attendance.dict(by_alias=True))
+    await db.attendance.insert_one(attendance.dict(by_alias=True))
 
     file_extension = file.filename.split(".")[-1] if "." in file.filename else "jpg"
     temp_filename = f"{attendance.id}_{now.strftime('%Y%m%d%H%M%S')}.{file_extension}"
