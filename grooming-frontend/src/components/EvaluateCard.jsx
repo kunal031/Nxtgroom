@@ -187,7 +187,7 @@ export default function EvaluateCard({ instructors, fetchInstructors }) {
               onChange={handleFileChange}
             />
             {preview ? (
-              <img src={preview} alt="Preview" className="absolute inset-0 w-full h-full object-cover object-top" />
+              <img src={preview} alt="Preview" className="absolute inset-0 w-full h-full object-contain object-center" />
             ) : (
               <div className="flex flex-col items-center text-slate-400 group-hover/drop:text-indigo-500 transition-colors p-6 text-center">
                 <div className="w-16 h-16 rounded-2xl bg-white shadow-sm flex items-center justify-center mb-4 group-hover/drop:scale-110 transition-transform duration-300">
