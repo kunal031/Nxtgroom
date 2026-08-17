@@ -179,16 +179,16 @@ export default function DailyAttendanceTable({ onRowClick }) {
   };
 
   return (
-    <div className="w-full flex flex-col h-full">
-      <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 mb-6">
-        <div>
-          <h2 className="text-xl font-extrabold text-slate-800 flex items-center gap-2">
+    <div className="w-full flex flex-col h-full min-w-0">
+      <div className="flex flex-col 2xl:flex-row justify-between items-start 2xl:items-center gap-4 mb-6 w-full">
+        <div className="shrink-0">
+          <h2 className="text-xl font-extrabold text-slate-800 flex items-center gap-2 whitespace-nowrap">
             <History size={24} className="text-indigo-600" />
             Daily Attendance Records
           </h2>
         </div>
         
-        <div className="flex flex-wrap items-center gap-3 w-full md:w-auto">
+        <div className="flex items-center gap-3 w-full overflow-x-auto pb-2 2xl:pb-0 scrollbar-hide">
           <input 
             type="date"
             value={dateFilter}
