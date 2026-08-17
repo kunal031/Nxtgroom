@@ -117,7 +117,7 @@ export default function CollegeManagement() {
             <Building2 size={24} className="text-indigo-600" />
             College Management
           </h2>
-          <p className="text-sm text-slate-500 mt-1">Manage partner colleges and campuses.</p>
+          <p className="text-sm text-slate-500 mt-1">Manage partner colleges and campuses</p>
         </div>
         <button 
           onClick={openAddModal}

@@ -4,56 +4,6 @@ import * as XLSX from 'xlsx';
 
 const API_BASE = import.meta.env.VITE_API_BASE || `http://${window.location.hostname}:8000`;
 const locationCache = {};
-const pendingQueue = [];
-let isProcessingQueue = false;
-
-const processQueue = async () => {
-  if (isProcessingQueue) return;
-  isProcessingQueue = true;
-  
-  while (pendingQueue.length > 0) {
-    const { lat, lon, coords, resolve } = pendingQueue[0];
-    
-    if (locationCache[coords]) {
-      resolve(locationCache[coords]);
-      pendingQueue.shift();
-      continue;
-    }
-
-    try {
-      const res = await fetch(`https://api.bigdatacloud.net/data/reverse-geocode-client?latitude=${lat}&longitude=${lon}&localityLanguage=en`);
-      const data = await res.json();
-      
-      if (data.error) {
-        resolve(coords);
-      } else {
-        const parts = [];
-        if (data.locality) parts.push(data.locality);
-        if (data.city && data.city !== data.locality) parts.push(data.city);
-        
-        let locName = parts.length > 0 ? parts.join(', ') : coords;
-        if (locName.includes('undefined')) locName = coords;
-        
-        locationCache[coords] = locName;
-        resolve(locName);
-      }
-    } catch (err) {
-      resolve(coords);
-    }
-    
-    pendingQueue.shift();
-    await new Promise(r => setTimeout(r, 200)); // Minimal delay
-  }
-  
-  isProcessingQueue = false;
-};
-
-const resolveLocationQueue = (coords, lat, lon) => {
-  return new Promise(resolve => {
-    pendingQueue.push({ coords, lat, lon, resolve });
-    processQueue();
-  });
-};
 
 function LocationName({ coords, onResolved }) {
   const [name, setName] = useState('Loading...');
@@ -71,11 +21,28 @@ function LocationName({ coords, onResolved }) {
       if (onResolved) onResolved(coords);
       return;
     }
-    
-    resolveLocationQueue(coords, lat, lon).then(locName => {
-      setName(locName);
-      if (onResolved) onResolved(locName);
-    });
+    fetch(`https://nominatim.openstreetmap.org/reverse?format=json&lat=${lat}&lon=${lon}`)
+      .then(r => r.json())
+      .then(data => {
+        const parts = [];
+        if (data.address?.suburb) parts.push(data.address.suburb);
+        else if (data.address?.neighbourhood) parts.push(data.address.neighbourhood);
+        
+        if (data.address?.city) parts.push(data.address.city);
+        else if (data.address?.town) parts.push(data.address.town);
+        else if (data.address?.state_district) parts.push(data.address.state_district);
+        
+        let locName = parts.length > 0 ? parts.join(', ') : (data.display_name?.split(',').slice(1,3).join(',').trim() || coords);
+        if (locName.includes('undefined')) locName = coords;
+        
+        locationCache[coords] = locName;
+        setName(locName);
+        if (onResolved) onResolved(locName);
+      })
+      .catch(() => {
+        setName(coords);
+        if (onResolved) onResolved(coords);
+      });
   }, [coords]);
 
   return <span className="flex items-center gap-1.5 text-indigo-600 font-medium whitespace-nowrap"><MapPin size={14}/> {name}</span>;
@@ -248,7 +215,6 @@ export default function DailyAttendanceTable({ onRowClick }) {
             <History size={24} className="text-indigo-600" />
             Daily Attendance Records
           </h2>
-          <p className="text-sm text-slate-500 mt-1">Live feed of all check-ins, check-outs, and grooming audits.</p>
         </div>
         
         <div className="flex flex-wrap items-center gap-3 w-full md:w-auto">

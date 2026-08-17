@@ -147,7 +147,7 @@ export default function BOAManagement() {
             <Users size={24} className="text-indigo-600" />
             Board of Administration
           </h2>
-          <p className="text-sm text-slate-500 mt-1">Manage all BOA access and profiles.</p>
+          <p className="text-sm text-slate-500 mt-1">Manage all BOA access and profiles</p>
         </div>
         <button 
           onClick={openAddModal}

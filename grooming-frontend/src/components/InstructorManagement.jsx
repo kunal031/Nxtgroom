@@ -150,7 +150,7 @@ export default function InstructorManagement() {
             <UserCog size={24} className="text-indigo-600" />
             Instructor Management
           </h2>
-          <p className="text-sm text-slate-500 mt-1">Manage instructor profiles and college assignments.</p>
+          <p className="text-sm text-slate-500 mt-1">Manage instructor profiles and college assignments</p>
         </div>
         <div className="flex items-center gap-4 flex-wrap">
           <select 
