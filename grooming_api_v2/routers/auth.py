@@ -21,7 +21,13 @@ async def login(form_data: OAuth2PasswordRequestForm = Depends()):
         raise HTTPException(status_code=400, detail="Incorrect email or password")
         
     access_token = create_access_token(data={"sub": user["email"], "role": user["role"]})
-    return {"access_token": access_token, "token_type": "bearer", "role": user["role"]}
+    return {
+        "access_token": access_token, 
+        "token_type": "bearer", 
+        "role": user["role"],
+        "email": user["email"],
+        "name": user.get("name", user["email"].split('@')[0].replace('.', ' ').title())
+    }
 
 @router.post("/forgot-password")
 async def forgot_password(req: OTPRequest):
