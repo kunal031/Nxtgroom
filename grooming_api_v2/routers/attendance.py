@@ -2,10 +2,15 @@ from fastapi import APIRouter, Depends, HTTPException, Form, File, UploadFile, B
 import asyncio
 import os
 import shutil
-from datetime import datetime, timedelta
+from datetime import datetime, timedelta, timezone
 from typing import Optional
 import csv
 import io
+
+IST = timezone(timedelta(hours=5, minutes=30))
+
+def get_ist_now():
+    return datetime.now(IST).replace(tzinfo=None)
 
 from database import get_db
 from auth import get_current_user
@@ -89,7 +94,7 @@ async def check_in(
     boa_user = await db.users.find_one({"email": current_user.get("email")})
     boa_id = boa_user.get("reference_id") if boa_user and boa_user.get("reference_id") else "super-admin"
 
-    now = datetime.now()
+    now = get_ist_now()
     attendance = AttendanceSchema(
         instructor_id=instructor_id,
         boa_id=boa_id,
@@ -128,7 +133,7 @@ async def check_out(req: AttendanceCheckOutReq, current_user: dict = Depends(get
     db = get_db()
     result = await db.attendance.update_many(
         {"instructor_id": req.instructor_id, "check_out_time": None},
-        {"$set": {"check_out_time": datetime.now()}}
+        {"$set": {"check_out_time": get_ist_now()}}
     )
     if result.modified_count == 0:
         raise HTTPException(status_code=400, detail="No active check-in found for today to check out.")
@@ -143,9 +148,9 @@ async def get_today_attendance(date: Optional[str] = None, current_user: dict = 
         try:
             start_date = datetime.strptime(date, "%Y-%m-%d")
         except ValueError:
-            start_date = datetime.now().replace(hour=0, minute=0, second=0, microsecond=0)
+            start_date = get_ist_now().replace(hour=0, minute=0, second=0, microsecond=0)
     else:
-        start_date = datetime.now().replace(hour=0, minute=0, second=0, microsecond=0)
+        start_date = get_ist_now().replace(hour=0, minute=0, second=0, microsecond=0)
         
     end_date = start_date + timedelta(days=1)
     query["check_in_time"] = {"$gte": start_date, "$lt": end_date}
