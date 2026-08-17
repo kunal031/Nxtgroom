@@ -101,7 +101,7 @@ export default function App() {
         onLogout={handleLogout}
       />
 
-      <main className="flex-1 h-full overflow-auto p-4 md:p-6 flex flex-col w-full">
+      <main className="flex-1 h-full overflow-y-scroll overflow-x-hidden p-4 md:p-6 flex flex-col w-full">
         <div className="flex items-center justify-between gap-4 mb-6 shrink-0 lg:hidden">
           <button 
             className="text-slate-600 hover:text-slate-900 bg-white p-2 rounded-lg border border-slate-200 shadow-sm"
