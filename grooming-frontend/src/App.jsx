@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import { SWRConfig } from 'swr';
 import { Menu } from 'lucide-react';
 import Sidebar from './components/Sidebar';
 import EvaluateCard from './components/EvaluateCard';
@@ -11,16 +12,34 @@ import InstructorManagement from './components/InstructorManagement';
 
 const API_BASE = import.meta.env.VITE_API_BASE || `http://${window.location.hostname}:8000`;
 
+function localStorageProvider() {
+  if (typeof window === 'undefined') return new Map();
+  try {
+    const map = new Map(JSON.parse(localStorage.getItem('nxtwave-swr-cache') || '[]'));
+    window.addEventListener('beforeunload', () => {
+      const appCache = JSON.stringify(Array.from(map.entries()));
+      localStorage.setItem('nxtwave-swr-cache', appCache);
+    });
+    return map;
+  } catch (e) {
+    return new Map();
+  }
+}
+
 export default function App() {
   const [authToken, setAuthToken] = useState(localStorage.getItem('nxtwave_token'));
   const [userRole, setUserRole] = useState(localStorage.getItem('nxtwave_role'));
-  const [activeTab, setActiveTab] = useState('overview'); // 'overview' | 'instructors'
+  const [activeTab, setActiveTab] = useState(localStorage.getItem('nxtwave_active_tab') || 'overview'); // 'overview' | 'instructors'
   const [instructors, setInstructors] = useState([]);
   const [loading, setLoading] = useState(true);
   const [search, setSearch] = useState('');
   const [selectedReport, setSelectedReport] = useState(null);
   const [selectedAttendanceRecord, setSelectedAttendanceRecord] = useState(null);
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
+
+  useEffect(() => {
+    localStorage.setItem('nxtwave_active_tab', activeTab);
+  }, [activeTab]);
 
   const handleLogin = (token, role) => {
     setAuthToken(token);
@@ -30,8 +49,11 @@ export default function App() {
   const handleLogout = () => {
     localStorage.removeItem('nxtwave_token');
     localStorage.removeItem('nxtwave_role');
+    localStorage.removeItem('nxtwave-swr-cache');
+    localStorage.removeItem('nxtwave_active_tab');
     setAuthToken(null);
     setUserRole(null);
+    setActiveTab('overview');
   };
 
   const fetchInstructors = async () => {
@@ -84,7 +106,8 @@ export default function App() {
   };
 
   return (
-    <div className="flex h-screen bg-[#f8f9fc] font-sans text-gray-800 overflow-hidden relative w-full">
+    <SWRConfig value={{ provider: localStorageProvider }}>
+      <div className="flex h-screen bg-[#f8f9fc] font-sans text-gray-800 overflow-hidden relative w-full">
       
       {isSidebarOpen && (
         <div 
@@ -161,5 +184,6 @@ export default function App() {
         </div>
       </main>
     </div>
+    </SWRConfig>
   );
 }
