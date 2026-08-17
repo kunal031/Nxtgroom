@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { LayoutGrid, Users, ShieldCheck, X, History, Building2, UserCog, Folder, ChevronDown, ChevronRight, MoreVertical, LogOut } from 'lucide-react';
 
-export default function Sidebar({ isSidebarOpen, setIsSidebarOpen, activeTab, navigate, onLogout }) {
+export default function Sidebar({ activeTab, navigate, onLogout }) {
   const [isManagementOpen, setIsManagementOpen] = useState(false);
   const [isProfileMenuOpen, setIsProfileMenuOpen] = useState(false);
   
@@ -12,16 +12,8 @@ export default function Sidebar({ isSidebarOpen, setIsSidebarOpen, activeTab, na
   }, [activeTab]);
 
   return (
-    <aside className={`fixed lg:static inset-y-0 left-0 w-64 bg-[#4554d3] flex flex-col shadow-[4px_0_24px_rgba(0,0,0,0.1)] z-50 shrink-0 transform transition-transform duration-300 ease-in-out ${
-      isSidebarOpen ? 'translate-x-0' : '-translate-x-full lg:translate-x-0'
-    }`}>
+    <aside className="hidden lg:flex flex-col w-64 bg-[#4554d3] shadow-[4px_0_24px_rgba(0,0,0,0.1)] z-50 shrink-0">
       <div className="p-6 pt-8 mb-4 relative">
-        <button 
-          className="lg:hidden absolute top-6 right-4 text-white/70 hover:text-white bg-white/10 p-1 rounded-full transition-colors" 
-          onClick={() => setIsSidebarOpen(false)}
-        >
-          <X size={20} />
-        </button>
         <div className="flex items-center gap-3 mb-1">
           <div className="w-10 h-10 bg-white rounded-xl flex items-center justify-center shrink-0 p-1 shadow-sm">
             <img src="/logo.png" alt="FacultyTrack Logo" className="w-full h-full object-contain" />

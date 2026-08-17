@@ -1,7 +1,8 @@
 import React, { useState, useEffect } from 'react';
 import { SWRConfig } from 'swr';
-import { Menu } from 'lucide-react';
+import { LogOut } from 'lucide-react';
 import Sidebar from './components/Sidebar';
+import BottomNav from './components/BottomNav';
 import EvaluateCard from './components/EvaluateCard';
 import InstructorDetail from './components/InstructorDetail';
 import Login from './components/Login';
@@ -38,7 +39,6 @@ export default function App() {
   const [search, setSearch] = useState('');
   const [selectedReport, setSelectedReport] = useState(null);
   const [selectedAttendanceRecord, setSelectedAttendanceRecord] = useState(null);
-  const [isSidebarOpen, setIsSidebarOpen] = useState(false);
 
   useEffect(() => {
     localStorage.setItem('nxtwave_active_tab', activeTab);
@@ -120,39 +120,37 @@ export default function App() {
 
   const navigate = (tab) => {
     setActiveTab(tab);
-    setIsSidebarOpen(false);
   };
 
   return (
     <SWRConfig value={{ provider: localStorageProvider }}>
       <div className="flex h-screen bg-[#f8f9fc] font-sans text-gray-800 overflow-hidden relative w-full">
       
-      {isSidebarOpen && (
-        <div 
-          className="fixed inset-0 bg-slate-900/40 backdrop-blur-sm z-40 lg:hidden" 
-          onClick={() => setIsSidebarOpen(false)}
-        />
-      )}
-
       <Sidebar 
-        isSidebarOpen={isSidebarOpen} 
-        setIsSidebarOpen={setIsSidebarOpen} 
         activeTab={activeTab} 
         navigate={navigate} 
         onLogout={handleLogout}
       />
 
-      <main className="flex-1 h-full overflow-y-scroll overflow-x-hidden p-4 md:p-6 flex flex-col w-full">
-        <div className="flex items-center justify-between gap-4 mb-6 shrink-0 lg:hidden">
+      <main className="flex-1 h-full overflow-y-scroll overflow-x-hidden pb-20 lg:pb-0 flex flex-col w-full">
+        {/* Mobile Top Header */}
+        <div className="lg:hidden flex items-center justify-between p-4 bg-white border-b border-slate-200 sticky top-0 z-20 shadow-sm shrink-0">
+          <div className="flex items-center gap-3">
+            <div className="w-10 h-10 bg-white rounded-xl flex items-center justify-center shrink-0 p-1 shadow-sm border border-slate-100">
+              <img src="/logo.png" alt="Logo" className="w-full h-full object-contain" />
+            </div>
+            <h2 className="font-extrabold text-slate-800 tracking-tight text-lg">Faculty<span className="text-[#4554d3]">Track</span></h2>
+          </div>
           <button 
-            className="text-slate-600 hover:text-slate-900 bg-white p-2 rounded-lg border border-slate-200 shadow-sm"
-            onClick={() => setIsSidebarOpen(true)}
+            onClick={handleLogout}
+            className="text-slate-400 hover:text-rose-500 transition-colors p-2 bg-slate-50 rounded-xl"
+            aria-label="Logout"
           >
-            <Menu size={20} />
+            <LogOut size={20} />
           </button>
         </div>
-        
-        <div className="flex flex-col xl:flex-row gap-6 items-start flex-1 min-h-0 w-full">
+
+        <div className="p-4 md:p-6 flex flex-col xl:flex-row gap-6 items-start flex-1 min-h-0 w-full">
           {activeTab === 'overview' && (
             <div className="w-full h-full flex justify-center items-start pt-10">
               <div className="w-full max-w-2xl shrink-0">
@@ -201,6 +199,8 @@ export default function App() {
           )}
         </div>
       </main>
+      
+      <BottomNav activeTab={activeTab} setActiveTab={setActiveTab} />
     </div>
     </SWRConfig>
   );
