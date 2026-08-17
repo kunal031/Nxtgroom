@@ -23,10 +23,10 @@ export default function Sidebar({ isSidebarOpen, setIsSidebarOpen, activeTab, na
         </button>
         <div className="flex items-center gap-3 mb-1">
           <div className="w-10 h-10 rounded-lg flex items-center justify-center shrink-0">
-            <img src="/logo.png" alt="FacultyTrack Logo" className="w-full h-full object-contain" />
+            <img src="/logo.png" alt="FacultyTrack Logo" className="w-full h-full object-contain mix-blend-multiply" />
           </div>
           <div>
-            <h2 className="font-bold text-lg leading-tight text-slate-800">FacultyTrack</h2>
+            <h2 className="font-extrabold text-lg leading-tight text-slate-800 tracking-tight">Faculty<span className="text-indigo-600">Track</span></h2>
           </div>
         </div>
       </div>

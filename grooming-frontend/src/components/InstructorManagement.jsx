@@ -11,6 +11,7 @@ export default function InstructorManagement() {
   const [isEditMode, setIsEditMode] = useState(false);
   const [editingId, setEditingId] = useState(null);
   const [search, setSearch] = useState('');
+  const [collegeFilter, setCollegeFilter] = useState('');
   
   const [formData, setFormData] = useState({
     name: '',
@@ -134,10 +135,12 @@ export default function InstructorManagement() {
     return col ? col.name : <span className="text-slate-400 font-mono text-xs">{collegeId}</span>;
   };
 
-  const filteredInstructors = instructors.filter(ins => 
-    (ins.name || '').toLowerCase().includes(search.toLowerCase()) || 
-    (ins.employee_id || '').toLowerCase().includes(search.toLowerCase())
-  );
+  const filteredInstructors = instructors.filter(ins => {
+    const matchesSearch = (ins.name || '').toLowerCase().includes(search.toLowerCase()) || 
+                          (ins.employee_id || '').toLowerCase().includes(search.toLowerCase());
+    const matchesCollege = collegeFilter === '' || ins.college_id === collegeFilter;
+    return matchesSearch && matchesCollege;
+  });
 
   return (
     <div className="w-full flex flex-col h-full animate-in fade-in duration-300">
@@ -149,7 +152,17 @@ export default function InstructorManagement() {
           </h2>
           <p className="text-sm text-slate-500 mt-1">Manage instructor profiles and college assignments.</p>
         </div>
-        <div className="flex items-center gap-4">
+        <div className="flex items-center gap-4 flex-wrap">
+          <select 
+            value={collegeFilter}
+            onChange={(e) => setCollegeFilter(e.target.value)}
+            className="px-4 py-2.5 rounded-xl border border-slate-200 text-sm focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 outline-none bg-white shadow-sm transition-all cursor-pointer min-w-[160px] appearance-none"
+          >
+            <option value="">All Colleges</option>
+            {colleges.map(c => (
+              <option key={c._id} value={c._id}>{c.name}</option>
+            ))}
+          </select>
           <div className="relative">
             <Search size={18} className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" />
             <input 

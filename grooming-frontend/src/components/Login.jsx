@@ -110,9 +110,9 @@ export default function Login({ onLogin }) {
         
         <div className="flex flex-col items-center mb-8">
           <div className="w-16 h-16 mb-4 flex items-center justify-center">
-            <img src="/logo.png" alt="FacultyTrack Logo" className="w-full h-full object-contain drop-shadow-sm" />
+            <img src="/logo.png" alt="FacultyTrack Logo" className="w-full h-full object-contain drop-shadow-sm mix-blend-multiply" />
           </div>
-          <h2 className="text-2xl font-extrabold text-slate-800">FacultyTrack</h2>
+          <h2 className="text-2xl font-extrabold text-slate-800 tracking-tight">Faculty<span className="text-indigo-600">Track</span></h2>
           <p className="text-sm font-medium text-slate-400 mt-1 uppercase tracking-widest">Management Suite</p>
         </div>
 

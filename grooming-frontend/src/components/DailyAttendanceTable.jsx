@@ -304,7 +304,31 @@ export default function DailyAttendanceTable({ onRowClick }) {
                       }} /> : '--'}
                     </td>
                     <td className="p-4">{getStatusBadge(r.status)}</td>
-                    <td className="p-4 text-sm text-slate-500 max-w-xs truncate">{r.remarks}</td>
+                    <td className="p-4 text-sm text-slate-500 max-w-xs">
+                      {(() => {
+                        if (!r.remarks) return '--';
+                        const match = r.remarks.match(/^\[(.*?)\]\s*(.*)$/);
+                        if (match) {
+                          const tag = match[1];
+                          const text = match[2];
+                          let tagColor = 'bg-slate-100 text-slate-600';
+                          const tLower = tag.toLowerCase();
+                          if (tLower.includes('poor')) tagColor = 'bg-rose-100 text-rose-700';
+                          else if (tLower.includes('average')) tagColor = 'bg-amber-100 text-amber-700';
+                          else if (tLower.includes('good')) tagColor = 'bg-emerald-100 text-emerald-700';
+                          else if (tLower.includes('excellent')) tagColor = 'bg-indigo-100 text-indigo-700';
+                          return (
+                            <div className="flex flex-col gap-1 items-start w-full">
+                              <span className={`px-2 py-0.5 rounded text-[10px] font-bold uppercase tracking-wider ${tagColor}`}>
+                                {tag}
+                              </span>
+                              <span className="truncate w-full block" title={text}>{text}</span>
+                            </div>
+                          );
+                        }
+                        return <span className="truncate w-full block" title={r.remarks}>{r.remarks}</span>;
+                      })()}
+                    </td>
                   </tr>
                 ))
               )}
