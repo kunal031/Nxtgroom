@@ -73,6 +73,9 @@ export default function DailyAttendanceTable({ onRowClick }) {
   const { data: allCollegesData = [] } = useSWR(`${API_BASE}/api/v2/colleges`, fetcher);
   const allColleges = allCollegesData.map(c => c.name);
 
+  const userRole = localStorage.getItem('nxtwave_role');
+  const isAdmin = userRole === 'SUPER_ADMIN' || userRole === 'admin';
+
   const [showExport, setShowExport] = useState(false);
   const [exportFrom, setExportFrom] = useState('');
   const [exportTo, setExportTo] = useState('');
@@ -200,14 +203,16 @@ export default function DailyAttendanceTable({ onRowClick }) {
             />
           </div>
 
-          <select 
-            value={collegeFilter}
-            onChange={(e) => setCollegeFilter(e.target.value)}
-            className="px-4 py-2 rounded-xl border border-slate-200 text-sm focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 outline-none shadow-sm text-slate-600 appearance-none bg-white min-w-[140px]"
-          >
-            <option value="">All Colleges</option>
-            {uniqueColleges.map(c => <option key={c} value={c}>{c}</option>)}
-          </select>
+          {isAdmin && (
+            <select 
+              value={collegeFilter}
+              onChange={(e) => setCollegeFilter(e.target.value)}
+              className="px-4 py-2 rounded-xl border border-slate-200 text-sm focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 outline-none shadow-sm text-slate-600 appearance-none bg-white min-w-[140px]"
+            >
+              <option value="">All Colleges</option>
+              {uniqueColleges.map(c => <option key={c} value={c}>{c}</option>)}
+            </select>
+          )}
           <select 
             value={roleFilter}
             onChange={(e) => setRoleFilter(e.target.value)}

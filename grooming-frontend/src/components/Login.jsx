@@ -165,7 +165,7 @@ export default function Login({ onLogin }) {
           <button 
             type="submit" 
             disabled={loading} 
-            className="w-full bg-[#8b5cf6] text-white py-3.5 rounded-xl font-bold text-sm uppercase tracking-wider flex items-center justify-center gap-2 hover:bg-[#7c3aed] transition-colors shadow-md shadow-indigo-200 disabled:opacity-70 mt-4"
+            className="w-full bg-[#4554d3] text-white py-3.5 rounded-xl font-bold text-sm uppercase tracking-wider flex items-center justify-center gap-2 hover:bg-[#3944b3] transition-colors shadow-md shadow-indigo-200 disabled:opacity-70 mt-4"
           >
             {loading ? 'Authenticating...' : 'Sign In'}
             {!loading && <ArrowRight size={18} className="w-5 h-5" />}

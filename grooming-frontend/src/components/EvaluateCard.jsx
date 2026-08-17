@@ -209,7 +209,7 @@ export default function EvaluateCard({ instructors, fetchInstructors }) {
             className={`flex-1 rounded-2xl py-4 font-bold text-sm flex items-center justify-center gap-2 transition-all ${
               loading 
                 ? 'bg-slate-100 text-slate-400 cursor-not-allowed' 
-                : 'bg-[#8b5cf6] text-white hover:bg-[#7c3aed] shadow-lg shadow-indigo-200 hover:-translate-y-0.5'
+                : 'bg-[#4554d3] text-white hover:bg-[#3944b3] shadow-lg shadow-indigo-200 hover:-translate-y-0.5'
             }`}
           >
             {loading ? <RefreshCw size={18} className="animate-spin" /> : <UploadCloud size={18} />}
