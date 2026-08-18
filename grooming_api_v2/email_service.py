@@ -17,10 +17,29 @@ def get_ses_client():
         aws_secret_access_key=AWS_SECRET_ACCESS_KEY
     )
 
-def send_evaluation_email(to_email: str, instructor_name: str, status: str, remarks: str):
+def send_evaluation_email(to_email: str, instructor_name: str, status: str, report: dict):
     client = get_ses_client()
+    
+    # Format the detailed report
+    report_lines = []
+    report_lines.append(f"AI Summary: {report.get('ai_summary', '')}")
+    
+    for category in ["general_idcard_check", "grooming_check", "attire_check", "accessories_check", "footwear_check"]:
+        checks = report.get(category, {})
+        if checks:
+            report_lines.append(f"\n[{category.replace('_', ' ').title()}]")
+            if isinstance(checks, list):
+                for item in checks:
+                    report_lines.append(f"- {item.get('checkpoint_name', 'Check')}: {item.get('observation', '')}")
+            else:
+                for k, v in checks.items():
+                    report_lines.append(f"- {k}: {v}")
+                    
+    detailed_report_str = "\n".join(report_lines)
+
     if not client:
         print(f"WARNING: AWS SES credentials not found. Mocking email to {to_email}.")
+        print(f"\n--- MOCKED EMAIL TO {to_email} ---\nSubject: Grooming Evaluation Status: {status}\n\nHello {instructor_name},\n\nYour daily grooming evaluation is complete.\nStatus: {status}\n\n{detailed_report_str}\n\nThank you,\nNxtWave Administration\n-----------------------------------\n")
         return
 
     subject = f"Grooming Evaluation Status: {status}"
@@ -28,7 +47,8 @@ def send_evaluation_email(to_email: str, instructor_name: str, status: str, rema
 
 Your daily grooming evaluation is complete.
 Status: {status}
-Remarks: {remarks}
+
+{detailed_report_str}
 
 Thank you,
 NxtWave Administration

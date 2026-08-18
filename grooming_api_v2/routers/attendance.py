@@ -67,9 +67,9 @@ async def process_ai_evaluation(attendance_id: str, filepath: str, gender: str, 
         )
         
         if admin_email:
-            send_evaluation_email(admin_email, instructor_name, status_val, report.get("ai_summary", ""))
+            send_evaluation_email(admin_email, instructor_name, status_val, report)
         if instructor_email:
-            send_evaluation_email(instructor_email, instructor_name, status_val, report.get("ai_summary", ""))
+            send_evaluation_email(instructor_email, instructor_name, status_val, report)
 
     except Exception as e:
         import traceback

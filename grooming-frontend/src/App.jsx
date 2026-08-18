@@ -1,7 +1,8 @@
 import React, { useState, useEffect } from 'react';
 import { SWRConfig } from 'swr';
-import { LogOut } from 'lucide-react';
+import { LogOut, CheckCircle2, RefreshCw } from 'lucide-react';
 import Sidebar from './components/Sidebar';
+import EvaluationReportModal from './components/EvaluationReportModal';
 import BottomNav from './components/BottomNav';
 import EvaluateCard from './components/EvaluateCard';
 import InstructorDetail from './components/InstructorDetail';
@@ -39,6 +40,37 @@ export default function App() {
   const [search, setSearch] = useState('');
   const [selectedReport, setSelectedReport] = useState(null);
   const [selectedAttendanceRecord, setSelectedAttendanceRecord] = useState(null);
+
+  // Global Notification State
+  const [pollingJobs, setPollingJobs] = useState([]);
+  const [unopenedReports, setUnopenedReports] = useState([]);
+  const [viewingEvaluation, setViewingEvaluation] = useState(null);
+
+  useEffect(() => {
+    if (pollingJobs.length === 0) return;
+
+    const intervalId = setInterval(async () => {
+      try {
+        const token = localStorage.getItem('nxtwave_token');
+        for (const job of pollingJobs) {
+          const res = await fetch(`${API_BASE}/api/v2/attendance/${job.id}/evaluation`, {
+            headers: { 'Authorization': `Bearer ${token}` }
+          });
+          if (res.ok) {
+            const evalData = await res.json();
+            setPollingJobs(prev => prev.filter(j => j.id !== job.id));
+            
+            const newReport = { ...job, evaluation: evalData, timestamp: Date.now() };
+            setUnopenedReports(prev => [...prev, newReport]); // Immediately add to inbox
+          }
+        }
+      } catch (err) {
+        // Keep polling
+      }
+    }, 3000);
+
+    return () => clearInterval(intervalId);
+  }, [pollingJobs]);
 
   useEffect(() => {
     localStorage.setItem('nxtwave_active_tab', activeTab);
@@ -157,6 +189,9 @@ export default function App() {
                 <EvaluateCard 
                   instructors={instructors} 
                   fetchInstructors={fetchInstructors} 
+                  setPollingJobs={setPollingJobs}
+                  unopenedReports={unopenedReports}
+                  setViewingEvaluation={setViewingEvaluation}
                 />
               </div>
             </div>
@@ -202,6 +237,29 @@ export default function App() {
       
       <BottomNav activeTab={activeTab} setActiveTab={setActiveTab} />
     </div>
+
+    {/* Global Notifications (Only show on overview page as requested) */}
+    {activeTab === 'overview' && (
+      <div className="fixed bottom-24 right-4 md:bottom-8 md:right-8 z-50 flex flex-col gap-3 items-end pointer-events-none">
+        {pollingJobs.map(job => (
+          <span key={job.id} className="pointer-events-auto inline-flex items-center gap-2 px-4 py-2.5 rounded-full text-sm font-bold bg-amber-50 text-amber-700 border border-amber-200 shadow-md animate-in slide-in-from-right-4">
+            <RefreshCw size={16} className="animate-spin" /> {job.instructorName} report pending...
+          </span>
+        ))}
+      </div>
+    )}
+
+    {viewingEvaluation && (
+      <EvaluationReportModal 
+        evaluation={viewingEvaluation.evaluation}
+        instructorName={viewingEvaluation.instructorName}
+        instructorRole={viewingEvaluation.instructorRole}
+        onClose={() => {
+          setUnopenedReports(prev => prev.filter(r => r.id !== viewingEvaluation.id));
+          setViewingEvaluation(null);
+        }}
+      />
+    )}
     </SWRConfig>
   );
 }
